@@ -233,3 +233,4 @@ CREATE POLICY "Les utilisateurs peuvent modifier leurs propres paramètres"
 
 Cette erreur vient probablement d'un script externe (peut-être un plugin de partage). Elle n'affecte pas le fonctionnement de l'application. Vous pouvez l'ignorer pour le moment.
 
+

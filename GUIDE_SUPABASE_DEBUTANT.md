@@ -82,3 +82,4 @@ VITE_SUPABASE_ANON_KEY=votre-anon-key
 - Vérifiez que vous avez bien exécuté la migration SQL
 - Redémarrez votre serveur après avoir modifié le `.env`
 
+

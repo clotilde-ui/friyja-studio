@@ -57,3 +57,4 @@ Pour tester si la fonction est accessible :
 Le code a été mis à jour pour afficher des messages d'erreur plus détaillés. 
 Lorsque vous essayez d'analyser un site, vous verrez maintenant le message d'erreur exact.
 
+

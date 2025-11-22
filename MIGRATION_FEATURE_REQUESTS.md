@@ -63,3 +63,4 @@ Si vous rencontrez une erreur lors de l'exécution :
 - Assurez-vous que les extensions nécessaires sont activées
 - Vérifiez les logs d'erreur dans Supabase
 
+

@@ -23,3 +23,4 @@ Après cette modification :
 
 Le code de l'application a déjà été modifié pour gérer cette configuration. Il vous suffit de désactiver la confirmation d'email dans l'interface Supabase.
 
+
