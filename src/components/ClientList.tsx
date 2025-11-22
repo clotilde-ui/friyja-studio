@@ -52,17 +52,16 @@ export default function ClientList({ onSelectClient, onNewClient }: ClientListPr
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-[#232323]">Chargement...</div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="text-[#232323] animate-pulse">Chargement...</div></div>;
   }
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        {/* Titre en Noir sur fond Crème */}
-        <h2 className="text-2xl font-bold text-[#232323]">Mes Clients</h2>
+        <h2 className="text-3xl font-bold text-[#232323] uppercase tracking-tight">Mes Clients</h2>
         <button
           onClick={onNewClient}
-          className="flex items-center gap-2 px-4 py-2 bg-[#24B745] text-white rounded-lg hover:bg-[#1f9e3b] transition-colors shadow-lg shadow-green-900/20 font-medium"
+          className="flex items-center gap-2 px-6 py-3 bg-[#24B745] text-[#FAF5ED] hover:bg-[#1f9e3b] hover:shadow-[4px_4px_0px_0px_#232323] transition-all duration-200 font-bold uppercase text-xs tracking-wider border-2 border-transparent hover:border-[#232323]"
         >
           <Plus className="w-5 h-5" />
           Nouveau Client
@@ -70,44 +69,44 @@ export default function ClientList({ onSelectClient, onNewClient }: ClientListPr
       </div>
 
       {clients.length === 0 ? (
-        <div className="text-center py-12 bg-[#232323] rounded-xl shadow-lg">
-          <p className="text-[#FAF5ED] mb-4">Aucun client pour le moment</p>
-          <button onClick={onNewClient} className="text-[#24B745] hover:text-white font-medium transition-colors">
+        <div className="text-center py-16 bg-[#232323] border border-[#232323]">
+          <p className="text-[#FAF5ED]/60 mb-6 text-lg">Aucun client pour le moment</p>
+          <button onClick={onNewClient} className="text-[#24B745] hover:text-[#FAF5ED] font-bold uppercase tracking-wide underline decoration-2 underline-offset-4 transition-colors">
             Créer votre premier client
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {clients.map((client) => (
             <div
               key={client.id}
               onClick={() => onSelectClient(client)}
-              // CARTE NOIRE (#232323) avec TEXTE CRÈME (#FAF5ED)
-              className="flex items-center justify-between p-5 bg-[#232323] text-[#FAF5ED] rounded-xl shadow-md hover:shadow-xl hover:scale-[1.01] transition-all duration-300 cursor-pointer group border border-transparent hover:border-[#24B745]"
+              // STYLE BRUTALISTE : Fond Anthracite, Texte Beige, Angles Droits (gérés par index.css)
+              className="flex items-center justify-between p-6 bg-[#232323] text-[#FAF5ED] hover:shadow-[8px_8px_0px_0px_#24B745] hover:-translate-y-1 hover:-translate-x-1 transition-all duration-200 cursor-pointer group border-2 border-[#232323]"
             >
-              <div className="flex-1 pl-2">
-                <h3 className="font-bold text-lg group-hover:text-[#24B745] transition-colors">{client.name}</h3>
-                <div className="flex items-center gap-4 mt-1.5">
-                  <p className="text-xs text-gray-400">
-                    Ajouté le {new Date(client.created_at).toLocaleDateString('fr-FR')}
+              <div className="flex-1">
+                <h3 className="font-bold text-xl group-hover:text-[#24B745] transition-colors uppercase tracking-wide">{client.name}</h3>
+                <div className="flex items-center gap-4 mt-2">
+                  <p className="text-xs text-[#FAF5ED]/50 font-mono">
+                    {new Date(client.created_at).toLocaleDateString('fr-FR')}
                   </p>
                   {clientAnalyses[client.id] > 0 && (
-                    <span className="flex items-center gap-1.5 text-xs text-[#24B745] font-medium bg-[#24B745]/10 border border-[#24B745]/20 px-2.5 py-0.5 rounded-md">
+                    <span className="flex items-center gap-2 text-xs text-[#232323] font-bold bg-[#24B745] px-3 py-1">
                       <Lightbulb className="w-3 h-3" />
-                      {clientAnalyses[client.id]} analyse{clientAnalyses[client.id] > 1 ? 's' : ''}
+                      {clientAnalyses[client.id]} PROJET{clientAnalyses[client.id] > 1 ? 'S' : ''}
                     </span>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={(e) => deleteClient(client.id, e)}
-                  className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                  title="Supprimer le client"
+                  className="p-3 text-[#FAF5ED]/30 hover:text-red-500 hover:bg-[#FAF5ED]/5 transition-colors"
+                  title="Supprimer"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
-                <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-[#FAF5ED] transition-colors" />
+                <ChevronRight className="w-6 h-6 text-[#FAF5ED]/30 group-hover:text-[#24B745] transition-colors" />
               </div>
             </div>
           ))}
