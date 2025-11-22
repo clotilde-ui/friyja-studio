@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, Analysis, Concept, Client } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram } from '../services/openaiService';
+import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram, generateImageGoogle } from '../services/openaiService';
 import { generateImagePrompt } from '../services/promptGenerationService';
 import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Copy } from 'lucide-react';
 
@@ -23,8 +23,12 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   const [editingConceptId, setEditingConceptId] = useState<string | null>(null);
   const [editedConcept, setEditedConcept] = useState<Partial<Concept>>({});
   const [selectedProvider, setSelectedProvider] = useState<Record<string, ImageProvider>>({});
+  
+  // States pour les clés API
   const [apiKey, setApiKey] = useState('');
   const [ideogramApiKey, setIdeogramApiKey] = useState('');
+  const [googleApiKey, setGoogleApiKey] = useState('');
+  
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
   const [clientData, setClientData] = useState<Client | null>(null);
 
@@ -40,18 +44,17 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     try {
       const { data } = await supabase
         .from('settings')
-        .select('openai_api_key, ideogram_api_key')
+        .select('openai_api_key, ideogram_api_key, google_api_key')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (data?.openai_api_key) {
-        setApiKey(data.openai_api_key);
-      }
-      if (data?.ideogram_api_key) {
-        setIdeogramApiKey(data.ideogram_api_key);
+      if (data) {
+        setApiKey(data.openai_api_key || '');
+        setIdeogramApiKey(data.ideogram_api_key || '');
+        setGoogleApiKey(data.google_api_key || '');
       }
     } catch (error) {
-      console.error('Error loading API key:', error);
+      console.error('Error loading API keys:', error);
     }
   }
 
@@ -279,6 +282,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       return;
     }
 
+    // Vérifications des clés API selon le provider choisi
     if (provider === 'openai' && !apiKey) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
@@ -286,6 +290,11 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
     if (provider === 'ideogram' && !ideogramApiKey) {
       alert('Veuillez configurer votre clé API Ideogram dans les paramètres');
+      return;
+    }
+
+    if (provider === 'google' && !googleApiKey) {
+      alert('Veuillez configurer votre clé API Google dans les paramètres');
       return;
     }
 
@@ -298,15 +307,11 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       let imageUrl: string;
 
       if (provider === 'ideogram') {
-        imageUrl = await generateImageIdeogram(
-          promptToUse,
-          ideogramApiKey
-        );
+        imageUrl = await generateImageIdeogram(promptToUse, ideogramApiKey);
+      } else if (provider === 'google') {
+        imageUrl = await generateImageGoogle(promptToUse, googleApiKey);
       } else {
-        imageUrl = await generateImage(
-          promptToUse,
-          apiKey
-        );
+        imageUrl = await generateImage(promptToUse, apiKey);
       }
 
       const { error } = await supabase
@@ -327,7 +332,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     } catch (error) {
       console.error('Error generating image:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      alert(`Erreur lors de la génération de l'image avec ${provider === 'ideogram' ? 'Ideogram' : 'OpenAI'}:\n\n${errorMessage}\n\nVérifiez votre clé API et votre connexion.`);
+      alert(`Erreur lors de la génération de l'image avec ${provider === 'ideogram' ? 'Ideogram' : (provider === 'google' ? 'Google' : 'OpenAI')}:\n\n${errorMessage}\n\nVérifiez votre clé API et votre connexion.`);
     } finally {
       setGeneratingImageId(null);
     }
@@ -336,6 +341,18 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   async function handleDownloadImage(concept: Concept) {
     if (!concept.image_url) return;
 
+    // Si c'est une image Data URL (Base64 venant de Google), on la télécharge directement
+    if (concept.image_url.startsWith('data:')) {
+        const link = document.createElement('a');
+        link.href = concept.image_url;
+        link.download = `${concept.concept.substring(0, 30).replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+    }
+
+    // Sinon (URL distante OpenAI/Ideogram), on passe par le proxy Supabase pour éviter les problèmes CORS
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const downloadFunctionUrl = `${supabaseUrl}/functions/v1/download-image`;
@@ -867,6 +884,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                   >
                                     <option value="openai">OpenAI</option>
                                     <option value="ideogram">Ideogram</option>
+                                    <option value="google">Google (Imagen 3)</option>
                                   </select>
                                   <button
                                     onClick={() => handleGenerateImage(concept)}
