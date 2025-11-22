@@ -1,16 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
+    /* Utilisation de Inter et du fond noir */
     font-family: 'Inter', sans-serif;
     @apply bg-[#272727] text-[#E5E5E5];
   }
   
-  /* Scrollbar personnalisée pour le dark mode */
+  /* Scrollbar sombre personnalisée */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -34,5 +33,5 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full;
+  @apply bg-slate-500 rounded-full;
 }
