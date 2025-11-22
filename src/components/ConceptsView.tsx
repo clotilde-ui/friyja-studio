@@ -3,7 +3,7 @@ import { supabase, Analysis, Concept, Client } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram, generateImageGoogle } from '../services/openaiService';
 import { generateImagePrompt } from '../services/promptGenerationService';
-import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Copy } from 'lucide-react';
+import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Copy, Video, MonitorPlay } from 'lucide-react';
 
 interface ConceptsViewProps {
   analysis: Analysis;
@@ -11,24 +11,29 @@ interface ConceptsViewProps {
 }
 
 type ImageProvider = 'openai' | 'ideogram' | 'google';
+type Tab = 'video' | 'static';
 
 export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   const { user } = useAuth();
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('video');
+  
+  // States de génération
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [generatingStatic, setGeneratingStatic] = useState(false);
   const [generatingImageId, setGeneratingImageId] = useState<string | null>(null);
   const [generatingPromptId, setGeneratingPromptId] = useState<string | null>(null);
+  
+  // States d'édition
   const [editingConceptId, setEditingConceptId] = useState<string | null>(null);
   const [editedConcept, setEditedConcept] = useState<Partial<Concept>>({});
   const [selectedProvider, setSelectedProvider] = useState<Record<string, ImageProvider>>({});
   
-  // States pour les clés API
+  // States pour les clés API et données
   const [apiKey, setApiKey] = useState('');
   const [ideogramApiKey, setIdeogramApiKey] = useState('');
   const [googleApiKey, setGoogleApiKey] = useState('');
-  
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
   const [clientData, setClientData] = useState<Client | null>(null);
 
@@ -37,6 +42,17 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     loadApiKey();
     loadClientData();
   }, [analysis.id]);
+
+  // Au chargement, s'il n'y a que des concepts statiques, on bascule sur l'onglet statique
+  useEffect(() => {
+    if (concepts.length > 0) {
+      const hasVideo = concepts.some(c => c.media_type === 'video');
+      const hasStatic = concepts.some(c => c.media_type === 'static');
+      if (!hasVideo && hasStatic) {
+        setActiveTab('static');
+      }
+    }
+  }, [concepts.length]);
 
   async function loadApiKey() {
     if (!user) return;
@@ -110,12 +126,14 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   }
 
   async function handleDeleteAll(stage: string) {
-    if (!confirm(`Supprimer tous les concepts ${stage} ?`)) return;
+    if (!confirm(`Supprimer tous les concepts ${stage} de ce type ?`)) return;
 
     try {
       const conceptIds = concepts
-        .filter(c => c.funnel_stage === stage)
+        .filter(c => c.funnel_stage === stage && c.media_type === activeTab)
         .map(c => c.id);
+
+      if (conceptIds.length === 0) return;
 
       const { error } = await supabase
         .from('concepts')
@@ -123,7 +141,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         .in('id', conceptIds);
 
       if (error) throw error;
-      setConcepts(concepts.filter(c => c.funnel_stage !== stage));
+      setConcepts(concepts.filter(c => !conceptIds.includes(c.id)));
     } catch (error) {
       console.error('Error deleting concepts:', error);
       alert('Erreur lors de la suppression');
@@ -172,6 +190,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       if (error) throw error;
 
       await loadConcepts();
+      setActiveTab('video');
     } catch (error) {
       console.error('Error generating concepts:', error);
       alert('Erreur lors de la génération des concepts. Vérifiez votre clé API.');
@@ -222,6 +241,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       if (error) throw error;
 
       await loadConcepts();
+      setActiveTab('static');
     } catch (error) {
       console.error('Error generating concepts:', error);
       alert('Erreur lors de la génération des concepts. Vérifiez votre clé API.');
@@ -433,45 +453,68 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   }
 
   function exportToCSV() {
-    const headers = ['Stage', 'Concept', 'Format', 'Hook 1', 'Hook 2', 'Hook 3', 'Objectif', 'Scroll Stopper', 'Problème', 'Solution', 'Bénéfices', 'Preuve', 'CTA', 'Visuel suggéré', 'Script'];
-    const rows = concepts.map(c => [
-      c.funnel_stage,
-      c.concept,
-      c.format,
-      c.hooks[0] || '',
-      c.hooks[1] || '',
-      c.hooks[2] || '',
-      c.marketing_objective,
-      c.scroll_stopper,
-      c.problem,
-      c.solution,
-      c.benefits,
-      c.proof,
-      c.cta,
-      c.suggested_visual,
-      c.script_outline,
-    ]);
+    const activeConcepts = concepts.filter(c => c.media_type === activeTab);
+    const headers = activeTab === 'video' 
+      ? ['Stage', 'Concept', 'Format', 'Hook 1', 'Hook 2', 'Hook 3', 'Objectif', 'Scroll Stopper', 'Problème', 'Solution', 'Bénéfices', 'Preuve', 'CTA', 'Script']
+      : ['Stage', 'Concept', 'Format', 'Hook 1', 'Hook 2', 'Hook 3', 'Objectif', 'Problème', 'Solution', 'Bénéfices', 'Preuve', 'CTA', 'Visuel suggéré', 'Prompt'];
+
+    const rows = activeConcepts.map(c => {
+      const base = [
+        c.funnel_stage,
+        c.concept,
+        c.format,
+        c.hooks[0] || '',
+        c.hooks[1] || '',
+        c.hooks[2] || '',
+        c.marketing_objective,
+      ];
+      
+      if (activeTab === 'video') {
+        return [
+          ...base,
+          c.scroll_stopper,
+          c.problem,
+          c.solution,
+          c.benefits,
+          c.proof,
+          c.cta,
+          c.script_outline
+        ];
+      } else {
+        return [
+          ...base,
+          c.problem,
+          c.solution,
+          c.benefits,
+          c.proof,
+          c.cta,
+          c.suggested_visual,
+          c.generated_prompt || ''
+        ];
+      }
+    });
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `concepts_${analysis.brand_name}_${Date.now()}.csv`;
+    link.download = `concepts_${activeTab}_${analysis.brand_name}_${Date.now()}.csv`;
     link.click();
   }
 
   function exportToText() {
-    let content = `CONCEPTS CRÉATIFS - ${analysis.brand_name}\n`;
+    const activeConcepts = concepts.filter(c => c.media_type === activeTab);
+    let content = `CONCEPTS ${activeTab.toUpperCase()} - ${analysis.brand_name}\n`;
     content += `Site: ${analysis.website_url}\n`;
     content += `Date: ${new Date().toLocaleDateString('fr-FR')}\n\n`;
     content += '='.repeat(80) + '\n\n';
 
     ['TOFU', 'MOFU', 'BOFU'].forEach(stage => {
-      const stageConcepts = concepts.filter(c => c.funnel_stage === stage);
+      const stageConcepts = activeConcepts.filter(c => c.funnel_stage === stage);
       if (stageConcepts.length === 0) return;
 
       content += `\n### ${stage} - ${stageConcepts.length} concepts\n\n`;
@@ -484,14 +527,26 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         c.hooks.forEach((h, j) => {
           content += `  ${j + 1}. ${h}\n`;
         });
-        content += `\nScroll Stopper:\n${c.scroll_stopper}\n\n`;
+        
+        if (activeTab === 'video') {
+          content += `\nScroll Stopper:\n${c.scroll_stopper}\n\n`;
+        }
+        
         content += `Problème:\n${c.problem}\n\n`;
         content += `Solution:\n${c.solution}\n\n`;
         content += `Bénéfices:\n${c.benefits}\n\n`;
         content += `Preuve:\n${c.proof}\n\n`;
         content += `CTA:\n${c.cta}\n\n`;
-        content += `Visuel suggéré:\n${c.suggested_visual}\n\n`;
-        content += `Script:\n${c.script_outline}\n\n`;
+        
+        if (activeTab === 'static') {
+          content += `Visuel suggéré:\n${c.suggested_visual}\n\n`;
+          if (c.generated_prompt) {
+            content += `Prompt:\n${c.generated_prompt}\n\n`;
+          }
+        } else {
+          content += `Script:\n${c.script_outline}\n\n`;
+        }
+        
         content += '-'.repeat(80) + '\n\n';
       });
     });
@@ -499,26 +554,54 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `concepts_${analysis.brand_name}_${Date.now()}.txt`;
+    link.download = `concepts_${activeTab}_${analysis.brand_name}_${Date.now()}.txt`;
     link.click();
   }
 
-  const tofuConcepts = concepts.filter(c => c.funnel_stage === 'TOFU');
-  const mofuConcepts = concepts.filter(c => c.funnel_stage === 'MOFU');
-  const bofuConcepts = concepts.filter(c => c.funnel_stage === 'BOFU');
-
-  const hasVideoConcepts = concepts.some(c => c.media_type === 'video');
-  const hasStaticConcepts = concepts.some(c => c.media_type === 'static');
+  // Filtrer les concepts selon l'onglet actif
+  const activeConcepts = concepts.filter(c => c.media_type === activeTab);
+  
+  const tofuConcepts = activeConcepts.filter(c => c.funnel_stage === 'TOFU');
+  const mofuConcepts = activeConcepts.filter(c => c.funnel_stage === 'MOFU');
+  const bofuConcepts = activeConcepts.filter(c => c.funnel_stage === 'BOFU');
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-slate-600 hover:text-slate-800 mb-6"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        Retour
-      </button>
+    <div className="max-w-[95%] mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-slate-600 hover:text-slate-800"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Retour
+        </button>
+        
+        {/* ONGLETS */}
+        <div className="flex bg-slate-100 p-1 rounded-lg">
+          <button
+            onClick={() => setActiveTab('video')}
+            className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${
+              activeTab === 'video'
+                ? 'bg-white text-[#26B743] shadow-sm'
+                : 'text-slate-600 hover:text-slate-800'
+            }`}
+          >
+            <Video className="w-4 h-4" />
+            Concepts Vidéos
+          </button>
+          <button
+            onClick={() => setActiveTab('static')}
+            className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${
+              activeTab === 'static'
+                ? 'bg-white text-[#FFBEFA] !text-purple-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-800'
+            }`}
+          >
+            <ImageIcon className="w-4 h-4" />
+            Concepts Statiques
+          </button>
+        </div>
+      </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -527,7 +610,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
             <p className="text-slate-600 text-sm">{analysis.website_url}</p>
           </div>
           <div className="flex gap-2">
-            {concepts.length > 0 && (
+            {activeConcepts.length > 0 && (
               <>
                 <button
                   onClick={exportToCSV}
@@ -545,34 +628,44 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                 </button>
               </>
             )}
-            <button
-              onClick={handleGenerateVideo}
-              disabled={generatingVideo || generatingStatic || !apiKey}
-              className="flex items-center gap-2 px-6 py-2 bg-[#26B743] text-white rounded-lg hover:bg-[#1f9336] disabled:bg-slate-400 transition-colors"
-            >
-              {generatingVideo ? (
-                <>
-                  <Loader className="w-5 h-5 animate-spin" />
-                  Génération...
-                </>
-              ) : (
-                'Générer concepts vidéos'
-              )}
-            </button>
-            <button
-              onClick={handleGenerateStatic}
-              disabled={generatingVideo || generatingStatic || !apiKey}
-              className="flex items-center gap-2 px-6 py-2 bg-[#FFBEFA] text-[#232323] rounded-lg hover:bg-[#ff9de6] disabled:bg-slate-400 transition-colors"
-            >
-              {generatingStatic ? (
-                <>
-                  <Loader className="w-5 h-5 animate-spin" />
-                  Génération...
-                </>
-              ) : (
-                'Générer concepts statiques'
-              )}
-            </button>
+            
+            {activeTab === 'video' ? (
+              <button
+                onClick={handleGenerateVideo}
+                disabled={generatingVideo || !apiKey}
+                className="flex items-center gap-2 px-6 py-2 bg-[#26B743] text-white rounded-lg hover:bg-[#1f9336] disabled:bg-slate-400 transition-colors"
+              >
+                {generatingVideo ? (
+                  <>
+                    <Loader className="w-5 h-5 animate-spin" />
+                    Génération...
+                  </>
+                ) : (
+                  <>
+                    <Video className="w-5 h-5" />
+                    Générer Vidéos
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={handleGenerateStatic}
+                disabled={generatingStatic || !apiKey}
+                className="flex items-center gap-2 px-6 py-2 bg-[#FFBEFA] text-[#232323] rounded-lg hover:bg-[#ff9de6] disabled:bg-slate-400 transition-colors"
+              >
+                {generatingStatic ? (
+                  <>
+                    <Loader className="w-5 h-5 animate-spin" />
+                    Génération...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-5 h-5" />
+                    Générer Statiques
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
         <div className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">
@@ -585,11 +678,14 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         <div className="flex items-center justify-center h-64">
           <Loader className="w-8 h-8 animate-spin text-[#26B743]" />
         </div>
-      ) : concepts.length === 0 ? (
+      ) : activeConcepts.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-          <p className="text-slate-500 mb-4">Aucun concept généré pour le moment</p>
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            {activeTab === 'video' ? <Video className="w-8 h-8 text-slate-400" /> : <ImageIcon className="w-8 h-8 text-slate-400" />}
+          </div>
+          <p className="text-slate-500 mb-4">Aucun concept {activeTab === 'video' ? 'vidéo' : 'statique'} généré</p>
           <p className="text-sm text-slate-400">
-            Cliquez sur "Générer les concepts" pour commencer
+            Cliquez sur le bouton "Générer" ci-dessus pour commencer
           </p>
         </div>
       ) : (
@@ -621,23 +717,31 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[120px]">Format</th>
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px]">Hooks</th>
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[120px]">Objectif</th>
-                        {hasVideoConcepts && (
+                        
+                        {activeTab === 'video' && (
                           <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Scroll Stopper</th>
                         )}
+                        
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Problème</th>
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Solution</th>
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Bénéfices</th>
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Preuve</th>
                         <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[150px]">CTA</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Visuel suggéré</th>
-                        {hasVideoConcepts && (
-                          <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[250px]">Script</th>
-                        )}
                         
-                        {/* COLONNE FUSIONNÉE : STUDIO CRÉA (Sticky) AVEC NOUVEAU BACKGROUND */}
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px] sticky right-[50px] bg-slate-50 z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
-                          Studio Créa
-                        </th>
+                        {activeTab === 'video' ? (
+                          <>
+                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Visuel suggéré</th>
+                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[250px]">Script</th>
+                          </>
+                        ) : (
+                          <>
+                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Visuel suggéré</th>
+                            {/* COLONNE FUSIONNÉE : STUDIO CRÉA (Sticky) AVEC NOUVEAU BACKGROUND */}
+                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px] sticky right-[50px] bg-slate-50 z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
+                              Studio Créa
+                            </th>
+                          </>
+                        )}
                         
                         {/* COLONNE ACTIONS (Sticky) */}
                         <th className="w-[50px] sticky right-0 bg-white z-20 border-l border-slate-200"></th>
@@ -650,7 +754,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
                         return (
                         <tr key={concept.id} className="border-b border-slate-100 hover:bg-slate-50 group">
-                          {/* ... (Colonnes de données identiques) ... */}
                           <td className="py-3 px-4 text-sm text-slate-600 font-medium">
                             {isEditing ? (
                               <textarea
@@ -706,7 +809,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.marketing_objective}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, marketing_objective: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
                               />
                             ) : (
                               <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full bg-${color}-100 text-${color}-700`}>
@@ -714,7 +816,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                               </span>
                             )}
                           </td>
-                          {concept.media_type === 'video' && (
+                          {activeTab === 'video' && (
                             <td className="py-3 px-4 text-sm text-slate-600">
                               {isEditing ? (
                                 <textarea
@@ -783,7 +885,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.cta}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, cta: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
                               />
                             ) : (
                               concept.cta
@@ -801,7 +902,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                               concept.suggested_visual
                             )}
                           </td>
-                          {concept.media_type === 'video' && (
+                          
+                          {activeTab === 'video' ? (
                             <td className="py-3 px-4 text-sm text-slate-600">
                               {isEditing ? (
                                 <textarea
@@ -814,11 +916,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 concept.script_outline
                               )}
                             </td>
-                          )}
-                          
-                          {/* COLONNE STUDIO CRÉA FUSIONNÉE (Sticky) AVEC NOUVEAU BACKGROUND */}
-                          <td className="py-3 px-4 sticky right-[50px] bg-slate-50 group-hover:bg-slate-100 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top transition-colors">
-                            {concept.media_type === 'static' ? (
+                          ) : (
+                            <td className="py-3 px-4 sticky right-[50px] bg-slate-50 group-hover:bg-slate-100 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top transition-colors">
                               <div className="flex flex-col gap-4">
                                 {/* Bloc Prompt */}
                                 <div className="flex flex-col gap-2">
@@ -919,10 +1018,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                   </div>
                                 )}
                               </div>
-                            ) : (
-                              <span className="text-sm text-slate-400">N/A (Vidéo)</span>
-                            )}
-                          </td>
+                            </td>
+                          )}
 
                           {/* COLONNE ACTIONS (Sticky) */}
                           <td className="py-3 px-2 sticky right-0 bg-white group-hover:bg-slate-50 border-l border-slate-200 z-10 align-top">
