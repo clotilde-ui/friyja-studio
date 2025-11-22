@@ -278,3 +278,42 @@ export async function generateImageIdeogram(
     throw new Error('Failed to connect to Ideogram API');
   }
 }
+// ... (gardez tout le code existant au-dessus) ...
+
+export async function generateImageGoogle(
+  prompt: string,
+  apiKey: string
+): Promise<string> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const edgeFunctionUrl = `${supabaseUrl}/functions/v1/generate-image-google`;
+
+  try {
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({
+        prompt,
+        apiKey,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Google Edge Function error:', errorData);
+      throw new Error(errorData.error || 'Failed to generate image with Google');
+    }
+
+    const data = await response.json();
+    return data.url;
+  } catch (error) {
+    console.error('Google generation error:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to connect to Google API');
+  }
+}
