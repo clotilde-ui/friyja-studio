@@ -4,28 +4,32 @@
 
 @layer base {
   body {
-    /* Utilisation de Inter et du fond noir */
     font-family: 'Inter', sans-serif;
-    @apply bg-[#272727] text-[#E5E5E5];
+    /* Fond Crème #FAF5ED et Texte Noir #232323 */
+    @apply bg-[#FAF5ED] text-[#232323];
   }
   
-  /* Scrollbar sombre personnalisée */
+  /* Scrollbar sombre sur fond crème */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-[#272727];
+    @apply bg-[#FAF5ED];
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-[#3E3E3E] rounded-full;
+    @apply bg-[#232323] rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-[#4E4E4E];
+    @apply bg-[#333333];
   }
 }
 
-/* Classe utilitaire pour les conteneurs défilants */
+/* Inputs personnalisés pour le thème sombre des cartes */
+.input-dark {
+  @apply bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] focus:border-[#24B745] focus:ring-1 focus:ring-[#24B745] placeholder-gray-500;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -33,5 +37,5 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-slate-500 rounded-full;
+  @apply bg-gray-500 rounded-full;
 }
