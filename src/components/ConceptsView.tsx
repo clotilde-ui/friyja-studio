@@ -227,8 +227,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
   }
 
-  // ... (imports existants)
-
   async function handleGeneratePrompt(concept: Concept) {
     if (!apiKey) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
@@ -239,15 +237,14 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       await loadClientData();
     }
 
-    // Petit check de sécurité supplémentaire
     if (!clientData) {
-      alert('Impossible de charger les données du client. Veuillez réessayer.');
+      alert('Impossible de charger les données du client');
       return;
     }
 
     setGeneratingPromptId(concept.id);
     try {
-      // MODIFICATION ICI : On passe 'analysis' en 2ème argument
+      // On passe analysis en plus pour avoir le contexte complet
       const prompt = await generateImagePrompt(clientData, analysis, concept, apiKey);
 
       const { error } = await supabase
@@ -288,21 +285,56 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
 
     setGeneratingImageId(concept.id);
+    
     try {
+      let promptToUse = concept.generated_prompt;
+
+      // Si pas de prompt généré, on le génère à la volée
+      if (!promptToUse) {
+        if (!clientData) {
+          // Tentative de rechargement si manquant
+          const { data, error } = await supabase
+            .from('clients')
+            .select('*')
+            .eq('id', analysis.client_id)
+            .single();
+            
+          if (error || !data) throw new Error('Impossible de charger les données client pour générer le prompt');
+          setClientData(data);
+          
+          // Génération du prompt
+          promptToUse = await generateImagePrompt(data, analysis, concept, apiKey);
+        } else {
+          promptToUse = await generateImagePrompt(clientData, analysis, concept, apiKey);
+        }
+
+        // Sauvegarde du prompt généré à la volée
+        await supabase
+          .from('concepts')
+          .update({
+            generated_prompt: promptToUse,
+            prompt_generated_at: new Date().toISOString()
+          })
+          .eq('id', concept.id);
+          
+        // Mise à jour de l'état local pour affichage immédiat
+        setConcepts(prev => prev.map(c => 
+          c.id === concept.id 
+            ? { ...c, generated_prompt: promptToUse, prompt_generated_at: new Date().toISOString() } 
+            : c
+        ));
+      }
+
       let imageUrl: string;
 
       if (provider === 'ideogram') {
         imageUrl = await generateImageIdeogram(
-          concept.concept,
-          concept.scroll_stopper,
-          concept.suggested_visual,
+          promptToUse!, // On envoie le prompt complet
           ideogramApiKey
         );
       } else {
         imageUrl = await generateImage(
-          concept.concept,
-          concept.scroll_stopper,
-          concept.suggested_visual,
+          promptToUse!, // On envoie le prompt complet
           apiKey
         );
       }
@@ -317,7 +349,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
       if (error) throw error;
 
-      setConcepts(concepts.map(c =>
+      setConcepts(prev => prev.map(c =>
         c.id === concept.id
           ? { ...c, image_url: imageUrl, image_generated_at: new Date().toISOString() }
           : c
