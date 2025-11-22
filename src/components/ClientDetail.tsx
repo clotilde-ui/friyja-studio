@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, Client, Analysis } from '../lib/supabase';
-import { ArrowLeft, Plus, Calendar, ChevronRight, Trash2, Search, Edit2, Save, X, Video, Image as ImageIcon, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, ChevronRight, Trash2, Search, Edit2, Save, X, Video, Image as ImageIcon } from 'lucide-react';
 
 interface ClientDetailProps {
   client: Client;
@@ -87,10 +87,12 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Bouton Retour : Noir sur Beige */}
       <button onClick={onBack} className="flex items-center gap-2 text-[#232323]/60 hover:text-[#24B745] mb-8 font-bold uppercase tracking-wider text-xs transition-colors">
         <ArrowLeft className="w-4 h-4" /> Retour aux clients
       </button>
 
+      {/* En-tête : Titre Noir sur fond Beige */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
           <h1 className="text-4xl font-black text-[#232323] uppercase tracking-tight mb-2">{client.name}</h1>
@@ -100,13 +102,13 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
             </a>
           )}
         </div>
-        <button onClick={onNewAnalysis} className="flex items-center gap-2 px-6 py-4 bg-[#24B745] text-[#FAF5ED] hover:bg-[#1f9e3b] hover:shadow-[4px_4px_0px_0px_#232323] transition-all duration-200 font-bold uppercase text-xs tracking-widest border-2 border-transparent hover:border-[#232323]">
+        <button onClick={onNewAnalysis} className="flex items-center gap-2 px-6 py-4 bg-[#24B745] text-[#FAF5ED] hover:bg-[#1f9e3b] hover:shadow-[4px_4px_0px_0px_#232323] transition-all duration-200 font-bold uppercase text-xs tracking-widest border-2 border-transparent hover:border-[#232323] rounded-none">
           <Plus className="w-5 h-5" /> Nouvelle Analyse
         </button>
       </div>
 
-      {/* SECTION IDENTITÉ VISUELLE */}
-      <div className="bg-[#232323] p-6 mb-10 border-l-4 border-[#24B745] shadow-md group relative">
+      {/* SECTION IDENTITÉ VISUELLE : Carte Noire, Texte Beige */}
+      <div className="bg-[#232323] p-6 mb-10 border-l-4 border-[#24B745] shadow-md group relative rounded-none">
         <div className="flex items-center justify-between mb-6 border-b border-[#FAF5ED]/10 pb-2">
           <h3 className="text-[#FAF5ED] font-bold uppercase tracking-widest text-xs">Identité Visuelle</h3>
           {!isEditing ? (
@@ -126,20 +128,20 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
             <div>
               <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Primaire</label>
               <div className="flex gap-2">
-                <input type="color" value={editForm.primary_color} onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })} className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer" />
-                <input type="text" value={editForm.primary_color} onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none" />
+                <input type="color" value={editForm.primary_color} onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })} className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer rounded-none" />
+                <input type="text" value={editForm.primary_color} onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none rounded-none" />
               </div>
             </div>
             <div>
               <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Secondaire</label>
               <div className="flex gap-2">
-                <input type="color" value={editForm.secondary_color} onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })} className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer" />
-                <input type="text" value={editForm.secondary_color} onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none" />
+                <input type="color" value={editForm.secondary_color} onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })} className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer rounded-none" />
+                <input type="text" value={editForm.secondary_color} onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none rounded-none" />
               </div>
             </div>
             <div className="md:col-span-2">
               <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Mood / Ambiance</label>
-              <input type="text" value={editForm.brand_mood} onChange={(e) => setEditForm({ ...editForm, brand_mood: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-3 py-2 text-sm focus:border-[#24B745] outline-none" />
+              <input type="text" value={editForm.brand_mood} onChange={(e) => setEditForm({ ...editForm, brand_mood: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-3 py-2 text-sm focus:border-[#24B745] outline-none rounded-none" />
             </div>
           </div>
         ) : (
@@ -147,14 +149,14 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
             <div>
               <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Primaire</p>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 border border-[#FAF5ED]/20" style={{ backgroundColor: client.primary_color || '#000' }}></div>
+                <div className="w-8 h-8 border border-[#FAF5ED]/20 rounded-none" style={{ backgroundColor: client.primary_color || '#000' }}></div>
                 <span className="text-[#FAF5ED] font-mono text-sm">{client.primary_color || 'N/A'}</span>
               </div>
             </div>
             <div>
               <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Secondaire</p>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 border border-[#FAF5ED]/20" style={{ backgroundColor: client.secondary_color || '#fff' }}></div>
+                <div className="w-8 h-8 border border-[#FAF5ED]/20 rounded-none" style={{ backgroundColor: client.secondary_color || '#fff' }}></div>
                 <span className="text-[#FAF5ED] font-mono text-sm">{client.secondary_color || 'N/A'}</span>
               </div>
             </div>
@@ -166,6 +168,7 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
         )}
       </div>
 
+      {/* Titre de section : Noir sur Beige */}
       <h2 className="text-2xl font-bold text-[#232323] mb-6 uppercase tracking-tight flex items-center gap-3">
         Historique des Analyses
         <span className="bg-[#232323] text-[#FAF5ED] text-xs px-2 py-1 rounded-none">{analyses.length}</span>
@@ -174,7 +177,7 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
       {loading ? (
         <div className="text-center py-12 text-[#232323] animate-pulse">Chargement...</div>
       ) : analyses.length === 0 ? (
-        <div className="text-center py-16 bg-[#232323] border border-[#232323]">
+        <div className="text-center py-16 bg-[#232323] border border-[#232323] rounded-none">
           <Search className="w-12 h-12 text-[#FAF5ED]/20 mx-auto mb-4" />
           <p className="text-[#FAF5ED]/60 mb-6">Aucune analyse effectuée</p>
           <button onClick={onNewAnalysis} className="text-[#24B745] hover:text-[#FAF5ED] font-bold uppercase tracking-wide underline decoration-2 underline-offset-4 transition-colors">
@@ -188,13 +191,14 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
             const staticCount = analysis.concepts?.filter(c => c.media_type === 'static').length || 0;
 
             return (
-              <div key={analysis.id} onClick={() => onSelectAnalysis(analysis)} className="group flex items-center justify-between p-6 bg-[#232323] border-l-4 border-transparent hover:border-[#24B745] hover:translate-x-1 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg">
+              <div key={analysis.id} onClick={() => onSelectAnalysis(analysis)} className="group flex items-center justify-between p-6 bg-[#232323] border-l-4 border-transparent hover:border-[#24B745] hover:translate-x-1 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg rounded-none">
                 <div className="flex-1 min-w-0 pr-4">
                   <div className="flex items-center gap-3 mb-2">
+                    {/* Titre Analyse : Beige sur fond noir */}
                     <h3 className="text-lg font-bold text-[#FAF5ED] group-hover:text-[#24B745] truncate transition-colors">
                       {analysis.brand_name}
                     </h3>
-                    {/* TAG SUPPRIMÉ ICI */}
+                    {/* TAG META SUPPRIMÉ ICI */}
                   </div>
                   <p className="text-[#FAF5ED]/60 text-sm line-clamp-1 font-light">{analysis.offer_details}</p>
                   
@@ -222,10 +226,10 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <button onClick={(e) => deleteAnalysis(analysis.id, e)} className="p-2 text-[#FAF5ED]/20 hover:text-red-500 hover:bg-[#FAF5ED]/5 transition-colors" title="Supprimer">
+                  <button onClick={(e) => deleteAnalysis(analysis.id, e)} className="p-2 text-[#FAF5ED]/20 hover:text-red-500 hover:bg-[#FAF5ED]/5 transition-colors rounded-none" title="Supprimer">
                     <Trash2 className="w-5 h-5" />
                   </button>
-                  <div className="w-10 h-10 bg-[#2A2A2A] flex items-center justify-center group-hover:bg-[#24B745] transition-colors">
+                  <div className="w-10 h-10 bg-[#2A2A2A] flex items-center justify-center group-hover:bg-[#24B745] transition-colors rounded-none">
                     <ChevronRight className="w-5 h-5 text-[#FAF5ED] group-hover:text-[#232323]" />
                   </div>
                 </div>
