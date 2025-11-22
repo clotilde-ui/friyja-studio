@@ -28,27 +28,19 @@ function App() {
 
   async function checkAdminStatus() {
     if (!user) return;
-
-    const { data } = await supabase
-      .from('settings')
-      .select('is_admin')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
+    const { data } = await supabase.from('settings').select('is_admin').eq('user_id', user.id).maybeSingle();
     setIsAdmin(data?.is_admin || false);
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF5ED]">
-        <div className="text-[#232323] font-sans">Chargement...</div>
+      <div className="min-h-screen flex items-center justify-center bg-studio-bg">
+        <div className="text-studio-text font-bold uppercase tracking-widest">Chargement...</div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Auth />;
-  }
+  if (!user) { return <Auth />; }
 
   function handleSelectClient(client: Client) { setSelectedClient(client); setView('clientDetail'); }
   function handleNewClient() { setShowNewClientModal(true); }
@@ -62,7 +54,7 @@ function App() {
   const NavButton = ({ onClick, icon: Icon, title, label }: any) => (
     <button
       onClick={onClick}
-      className="p-2 text-gray-400 hover:text-[#FAF5ED] hover:bg-white/10 rounded-lg transition-all duration-200 flex items-center gap-2"
+      className="p-2 text-[#FAF5ED]/70 hover:text-[#FAF5ED] hover:bg-[#FAF5ED]/10 transition-all duration-200 flex items-center gap-2"
       title={title}
     >
       <Icon className="w-5 h-5" />
@@ -71,19 +63,17 @@ function App() {
   );
 
   return (
-    // FOND CRÈME (#FAF5ED)
-    <div className="min-h-screen bg-[#FAF5ED] text-[#232323] font-sans selection:bg-[#24B745] selection:text-white">
-      
-      {/* HEADER NOIR (#232323) */}
-      <header className="sticky top-0 z-50 bg-[#232323] text-[#FAF5ED] shadow-lg">
+    <div className="min-h-screen bg-studio-bg text-studio-text font-sans selection:bg-studio-accent selection:text-studio-bg">
+      {/* HEADER : Fond #232323, Texte #FAF5ED */}
+      <header className="sticky top-0 z-50 bg-[#232323] border-b border-[#FAF5ED]/10 shadow-md">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={handleBackToClients}>
-            <div className="bg-[#24B745] p-2 rounded-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="bg-studio-accent p-2 shadow-[4px_4px_0px_0px_#FAF5ED] group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-none transition-all">
+              <Sparkles className="w-5 h-5 text-[#FAF5ED]" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#FAF5ED] tracking-tight">Freyja Studio</h1>
-              <p className="text-xs text-gray-400 font-medium">Creative Intelligence</p>
+              <h1 className="text-xl font-bold text-[#FAF5ED] tracking-tight uppercase">Freyja Studio</h1>
+              <p className="text-xs text-[#FAF5ED]/60 font-medium tracking-widest">Creative Intelligence</p>
             </div>
           </div>
           
@@ -93,11 +83,11 @@ function App() {
             <NavButton onClick={() => setView('features')} icon={Lightbulb} title="Suggestions" />
             <NavButton onClick={() => setView('settings')} icon={SettingsIcon} title="Paramètres" />
             
-            <div className="w-px h-6 bg-white/10 mx-2"></div>
+            <div className="w-px h-6 bg-[#FAF5ED]/20 mx-2"></div>
             
             <button
               onClick={signOut}
-              className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-[#FAF5ED] hover:bg-white/10 rounded-lg transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 text-[#FAF5ED]/70 hover:text-[#FAF5ED] border border-transparent hover:border-[#FAF5ED]/20 transition-colors text-sm font-medium"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden md:inline">Déconnexion</span>
@@ -108,27 +98,17 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="animate-fade-in">
-          {view === 'clients' && (
-            <ClientList onSelectClient={handleSelectClient} onNewClient={handleNewClient} />
-          )}
-          {view === 'clientDetail' && selectedClient && (
-            <ClientDetail client={selectedClient} onBack={handleBackToClients} onSelectAnalysis={handleSelectAnalysis} onNewAnalysis={handleNewAnalysis} />
-          )}
-          {view === 'analysis' && selectedClient && (
-            <AnalysisForm client={selectedClient} onBack={() => setView('clientDetail')} onAnalysisCreated={handleAnalysisCreated} />
-          )}
-          {view === 'concepts' && selectedAnalysis && (
-            <ConceptsView analysis={selectedAnalysis} onBack={handleBackToAnalysis} />
-          )}
+          {view === 'clients' && <ClientList onSelectClient={handleSelectClient} onNewClient={handleNewClient} />}
+          {view === 'clientDetail' && selectedClient && <ClientDetail client={selectedClient} onBack={handleBackToClients} onSelectAnalysis={handleSelectAnalysis} onNewAnalysis={handleNewAnalysis} />}
+          {view === 'analysis' && selectedClient && <AnalysisForm client={selectedClient} onBack={() => setView('clientDetail')} onAnalysisCreated={handleAnalysisCreated} />}
+          {view === 'concepts' && selectedAnalysis && <ConceptsView analysis={selectedAnalysis} onBack={handleBackToAnalysis} />}
           {view === 'settings' && <Settings onBack={handleBackToClients} />}
           {view === 'features' && <FeatureRequests onBack={handleBackToClients} />}
           {view === 'admin' && <AdminDashboard onBack={handleBackToClients} />}
         </div>
       </main>
 
-      {showNewClientModal && (
-        <NewClientModal onClose={() => setShowNewClientModal(false)} onClientCreated={handleClientCreated} />
-      )}
+      {showNewClientModal && <NewClientModal onClose={() => setShowNewClientModal(false)} onClientCreated={handleClientCreated} />}
     </div>
   );
 }
