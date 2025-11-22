@@ -40,8 +40,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#272727]">
-        <div className="text-[#E5E5E5]">Chargement...</div>
+      <div className="min-h-screen flex items-center justify-center bg-studio-dark">
+        <div className="text-studio-light animate-pulse">Chargement...</div>
       </div>
     );
   }
@@ -50,51 +50,20 @@ function App() {
     return <Auth />;
   }
 
-  function handleSelectClient(client: Client) {
-    setSelectedClient(client);
-    setView('clientDetail');
-  }
+  // ... (Fonctions de navigation inchangées) ...
+  function handleSelectClient(client: Client) { setSelectedClient(client); setView('clientDetail'); }
+  function handleNewClient() { setShowNewClientModal(true); }
+  function handleClientCreated(client: Client) { setShowNewClientModal(false); setSelectedClient(client); setView('analysis'); }
+  function handleAnalysisCreated(analysis: Analysis) { setSelectedAnalysis(analysis); setView('concepts'); }
+  function handleBackToClients() { setSelectedClient(null); setSelectedAnalysis(null); setView('clients'); }
+  function handleBackToAnalysis() { setSelectedAnalysis(null); setView('clientDetail'); }
+  function handleSelectAnalysis(analysis: Analysis) { setSelectedAnalysis(analysis); setView('concepts'); }
+  function handleNewAnalysis() { setView('analysis'); }
 
-  function handleNewClient() {
-    setShowNewClientModal(true);
-  }
-
-  function handleClientCreated(client: Client) {
-    setShowNewClientModal(false);
-    setSelectedClient(client);
-    setView('analysis');
-  }
-
-  function handleAnalysisCreated(analysis: Analysis) {
-    setSelectedAnalysis(analysis);
-    setView('concepts');
-  }
-
-  function handleBackToClients() {
-    setSelectedClient(null);
-    setSelectedAnalysis(null);
-    setView('clients');
-  }
-
-  function handleBackToAnalysis() {
-    setSelectedAnalysis(null);
-    setView('clientDetail');
-  }
-
-  function handleSelectAnalysis(analysis: Analysis) {
-    setSelectedAnalysis(analysis);
-    setView('concepts');
-  }
-
-  function handleNewAnalysis() {
-    setView('analysis');
-  }
-
-  // Configuration du menu de navigation
   const NavButton = ({ onClick, icon: Icon, title, label }: any) => (
     <button
       onClick={onClick}
-      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 flex items-center gap-2"
+      className="p-2 text-studio-dim hover:text-studio-light hover:bg-white/5 rounded-lg transition-all duration-200 flex items-center gap-2"
       title={title}
     >
       <Icon className="w-5 h-5" />
@@ -103,17 +72,18 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-[#272727] text-[#E5E5E5] font-sans selection:bg-[#26B743] selection:text-white">
-      {/* Header Dark & Glassmorphism */}
-      <header className="sticky top-0 z-50 bg-[#272727]/90 backdrop-blur-md border-b border-white/10 shadow-lg">
+    <div className="min-h-screen bg-studio-dark text-studio-light font-sans selection:bg-studio-accent selection:text-white">
+      {/* Header Flottant (Glassmorphism) */}
+      <header className="sticky top-0 z-50 bg-[#272727]/90 backdrop-blur-md border-b border-white/5 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-[#26B743] to-emerald-600 p-2 rounded-lg shadow-lg shadow-emerald-900/20">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={handleBackToClients}>
+            {/* Logo Vert Freyja */}
+            <div className="bg-studio-accent p-2 rounded-lg shadow-lg shadow-green-900/20 group-hover:scale-105 transition-transform duration-300">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight">Freyja Studio</h1>
-              <p className="text-xs text-gray-400 font-medium">Creative Intelligence</p>
+              <p className="text-xs text-studio-dim font-medium">Creative Intelligence</p>
             </div>
           </div>
           
@@ -131,7 +101,7 @@ function App() {
             
             <button
               onClick={signOut}
-              className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 text-studio-dim hover:text-white hover:bg-white/5 rounded-lg transition-colors text-sm font-medium"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden md:inline">Déconnexion</span>
@@ -141,7 +111,6 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Conteneur principal avec effet de profondeur */}
         <div className="animate-fade-in">
           {view === 'clients' && (
             <ClientList
