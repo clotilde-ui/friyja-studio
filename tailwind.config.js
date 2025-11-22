@@ -8,10 +8,15 @@ export default {
       },
       colors: {
         studio: {
-          dark: '#272727',    // Votre fond principal
+          dark: '#272727',    // Fond principal
           card: '#333333',    // Fond des cartes
-          light: '#E5E5E5',   // Texte
-          accent: '#26B743',  // Vert Freyja
+          light: '#E5E5E5',   // Texte principal
+          dim: '#A0A0A0',     // Texte secondaire
+          
+          // Vos couleurs de marque
+          accent: '#24B745',  // Vert Freyja (Action principale)
+          pink: '#FFBEFA',    // Rose (Action secondaire / Statique)
+          cream: '#FAF5ED',   // Crème (Fond clair / Info)
         }
       }
     },
