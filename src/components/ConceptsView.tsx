@@ -633,13 +633,13 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                         {hasVideoConcepts && (
                           <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[250px]">Script</th>
                         )}
-                        {/* Colonnes Sticky à droite */}
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[280px] sticky right-[290px] bg-white z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
-                          Prompt Créa
+                        
+                        {/* COLONNE FUSIONNÉE : STUDIO CRÉA (Sticky) */}
+                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px] sticky right-[50px] bg-white z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
+                          Studio Créa
                         </th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[240px] sticky right-[50px] bg-white z-20 border-l border-slate-200">
-                          Image
-                        </th>
+                        
+                        {/* COLONNE ACTIONS (Sticky) */}
                         <th className="w-[50px] sticky right-0 bg-white z-20 border-l border-slate-200"></th>
                       </tr>
                     </thead>
@@ -650,6 +650,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
                         return (
                         <tr key={concept.id} className="border-b border-slate-100 hover:bg-slate-50 group">
+                          {/* ... (Colonnes de données identiques) ... */}
                           <td className="py-3 px-4 text-sm text-slate-600 font-medium">
                             {isEditing ? (
                               <textarea
@@ -705,7 +706,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.marketing_objective}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, marketing_objective: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
                               />
                             ) : (
                               <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full bg-${color}-100 text-${color}-700`}>
@@ -814,112 +814,111 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                             </td>
                           )}
                           
-                          {/* COLONNE PROMPT CRÉA (Sticky) */}
-                          <td className="py-3 px-4 sticky right-[290px] bg-white group-hover:bg-slate-50 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top">
+                          {/* COLONNE STUDIO CRÉA FUSIONNÉE (Sticky) */}
+                          <td className="py-3 px-4 sticky right-[50px] bg-white group-hover:bg-slate-50 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top">
                             {concept.media_type === 'static' ? (
-                              <div className="flex flex-col gap-2">
-                                <button
-                                  onClick={() => handleGeneratePrompt(concept)}
-                                  disabled={generatingPromptId === concept.id}
-                                  className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50"
-                                >
-                                  {generatingPromptId === concept.id ? (
-                                    <>
-                                      <Loader className="w-3 h-3 animate-spin" />
-                                      Génération...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Sparkles className="w-3 h-3" />
-                                      {concept.generated_prompt ? 'Régénérer prompt' : 'Générer un prompt'}
-                                    </>
+                              <div className="flex flex-col gap-4">
+                                {/* Bloc Prompt */}
+                                <div className="flex flex-col gap-2">
+                                  <button
+                                    onClick={() => handleGeneratePrompt(concept)}
+                                    disabled={generatingPromptId === concept.id}
+                                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50"
+                                  >
+                                    {generatingPromptId === concept.id ? (
+                                      <>
+                                        <Loader className="w-3 h-3 animate-spin" />
+                                        Génération...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Sparkles className="w-3 h-3" />
+                                        {concept.generated_prompt ? 'Régénérer prompt' : 'Générer un prompt'}
+                                      </>
+                                    )}
+                                  </button>
+                                  
+                                  {concept.generated_prompt && (
+                                    <div className="p-2 bg-slate-50 rounded border border-slate-200 group-hover:bg-white">
+                                      <div className="flex items-start justify-between gap-2 mb-1">
+                                        <p className="text-xs font-semibold text-slate-700">Prompt:</p>
+                                        <button
+                                          onClick={() => {
+                                            navigator.clipboard.writeText(concept.generated_prompt!);
+                                            alert('Prompt copié !');
+                                          }}
+                                          className="p-1 text-slate-600 hover:text-slate-800"
+                                          title="Copier le prompt"
+                                        >
+                                          <Copy className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                      <p className="text-xs text-slate-600 whitespace-pre-wrap max-h-20 overflow-y-auto custom-scrollbar">
+                                        {concept.generated_prompt}
+                                      </p>
+                                    </div>
                                   )}
-                                </button>
-                                
+                                </div>
+
+                                {/* Bloc Image (Séparateur visuel si prompt existe) */}
                                 {concept.generated_prompt && (
-                                  <div className="p-2 bg-slate-50 rounded border border-slate-200 group-hover:bg-white">
-                                    <div className="flex items-start justify-between gap-2 mb-1">
-                                      <p className="text-xs font-semibold text-slate-700">Prompt:</p>
-                                      <button
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(concept.generated_prompt!);
-                                          alert('Prompt copié !');
-                                        }}
-                                        className="p-1 text-slate-600 hover:text-slate-800"
-                                        title="Copier le prompt"
+                                  <div className="border-t border-slate-200 pt-4 flex flex-col gap-2">
+                                    {concept.image_url && (
+                                      <div className="relative group/img">
+                                        <img
+                                          src={concept.image_url}
+                                          alt={concept.concept}
+                                          className="w-full h-32 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                          onClick={() => setModalImageUrl(concept.image_url!)}
+                                        />
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDownloadImage(concept);
+                                          }}
+                                          className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded shadow-sm opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                          title="Télécharger l'image"
+                                        >
+                                          <DownloadIcon className="w-4 h-4 text-slate-700" />
+                                        </button>
+                                      </div>
+                                    )}
+                                    
+                                    <div className="flex flex-col gap-2">
+                                      <select
+                                        value={selectedProvider[concept.id] || 'openai'}
+                                        onChange={(e) => setSelectedProvider({
+                                          ...selectedProvider,
+                                          [concept.id]: e.target.value as ImageProvider
+                                        })}
+                                        className="text-xs border border-slate-300 rounded px-2 py-1 w-full"
+                                        disabled={generatingImageId === concept.id}
                                       >
-                                        <Copy className="w-3 h-3" />
+                                        <option value="openai">OpenAI</option>
+                                        <option value="ideogram">Ideogram</option>
+                                        <option value="google">Google (Imagen 3)</option>
+                                      </select>
+                                      <button
+                                        onClick={() => handleGenerateImage(concept)}
+                                        disabled={generatingImageId === concept.id}
+                                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-[#26B743] hover:bg-[#1f9336] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Générer l'image à partir du prompt"
+                                      >
+                                        {generatingImageId === concept.id ? (
+                                          <Loader className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                          <>
+                                            <ImageIcon className="w-3 h-3" />
+                                            Générer
+                                          </>
+                                        )}
                                       </button>
                                     </div>
-                                    <p className="text-xs text-slate-600 whitespace-pre-wrap max-h-32 overflow-y-auto custom-scrollbar">
-                                      {concept.generated_prompt.substring(0, 150)}...
-                                    </p>
                                   </div>
                                 )}
                               </div>
                             ) : (
                               <span className="text-sm text-slate-400">N/A (Vidéo)</span>
-                            )}
-                          </td>
-
-                          {/* COLONNE IMAGE (Sticky) */}
-                          <td className="py-3 px-4 sticky right-[50px] bg-white group-hover:bg-slate-50 border-l border-slate-200 z-10 align-top">
-                            {concept.media_type === 'static' ? (
-                              <div className="flex flex-col gap-2">
-                                {concept.image_url && (
-                                  <div className="relative group/img">
-                                    <img
-                                      src={concept.image_url}
-                                      alt={concept.concept}
-                                      className="w-full h-32 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
-                                      onClick={() => setModalImageUrl(concept.image_url!)}
-                                    />
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDownloadImage(concept);
-                                      }}
-                                      className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded shadow-sm opacity-0 group-hover/img:opacity-100 transition-opacity"
-                                      title="Télécharger l'image"
-                                    >
-                                      <DownloadIcon className="w-4 h-4 text-slate-700" />
-                                    </button>
-                                  </div>
-                                )}
-                                
-                                <div className="flex flex-col gap-2">
-                                  <select
-                                    value={selectedProvider[concept.id] || 'openai'}
-                                    onChange={(e) => setSelectedProvider({
-                                      ...selectedProvider,
-                                      [concept.id]: e.target.value as ImageProvider
-                                    })}
-                                    className="text-xs border border-slate-300 rounded px-2 py-1 w-full"
-                                    disabled={generatingImageId === concept.id}
-                                  >
-                                    <option value="openai">OpenAI</option>
-                                    <option value="ideogram">Ideogram</option>
-                                    <option value="google">Google (Imagen 3)</option>
-                                  </select>
-                                  <button
-                                    onClick={() => handleGenerateImage(concept)}
-                                    disabled={generatingImageId === concept.id || !concept.generated_prompt}
-                                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-[#26B743] hover:bg-[#1f9336] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title={!concept.generated_prompt ? "Générez d'abord un prompt" : "Générer l'image"}
-                                  >
-                                    {generatingImageId === concept.id ? (
-                                      <Loader className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <>
-                                        <ImageIcon className="w-3 h-3" />
-                                        Générer
-                                      </>
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-slate-400">N/A</span>
                             )}
                           </td>
 
