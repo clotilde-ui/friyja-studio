@@ -3,7 +3,7 @@ import { supabase, Analysis, Concept, Client } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram, generateImageGoogle } from '../services/openaiService';
 import { generateImagePrompt } from '../services/promptGenerationService';
-import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Copy, Video, MonitorPlay } from 'lucide-react';
+import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Copy, Video, ChevronDown, ChevronUp, Save } from 'lucide-react';
 
 interface ConceptsViewProps {
   analysis: Analysis;
@@ -19,6 +19,11 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('video');
   
+  // Gestion de l'analyse éditable
+  const [analysisParams, setAnalysisParams] = useState<Analysis>(analysis);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [isSavingAnalysis, setIsSavingAnalysis] = useState(false);
+
   // States de génération
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [generatingStatic, setGeneratingStatic] = useState(false);
@@ -38,6 +43,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   const [clientData, setClientData] = useState<Client | null>(null);
 
   useEffect(() => {
+    setAnalysisParams(analysis);
     loadConcepts();
     loadApiKey();
     loadClientData();
@@ -107,6 +113,28 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
   }
 
+  async function handleSaveAnalysis() {
+    setIsSavingAnalysis(true);
+    try {
+      const { error } = await supabase
+        .from('analyses')
+        .update({
+          offer_details: analysisParams.offer_details,
+          target_audience: analysisParams.target_audience,
+          brand_positioning: analysisParams.brand_positioning,
+        })
+        .eq('id', analysis.id);
+
+      if (error) throw error;
+      alert('Analyse mise à jour avec succès');
+    } catch (error) {
+      console.error('Error updating analysis:', error);
+      alert('Erreur lors de la mise à jour de l\'analyse');
+    } finally {
+      setIsSavingAnalysis(false);
+    }
+  }
+
   async function handleDeleteConcept(id: string, e: React.MouseEvent) {
     e.stopPropagation();
     if (!confirm('Supprimer ce concept ?')) return;
@@ -157,11 +185,11 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     setGeneratingVideo(true);
     try {
       const generatedConcepts = await generateVideoConcepts(
-        analysis.brand_name,
-        analysis.website_url,
-        analysis.offer_details,
-        analysis.target_audience,
-        analysis.brand_positioning,
+        analysisParams.brand_name,
+        analysisParams.website_url,
+        analysisParams.offer_details,
+        analysisParams.target_audience,
+        analysisParams.brand_positioning,
         apiKey
       );
 
@@ -208,11 +236,11 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     setGeneratingStatic(true);
     try {
       const generatedConcepts = await generateStaticConcepts(
-        analysis.brand_name,
-        analysis.website_url,
-        analysis.offer_details,
-        analysis.target_audience,
-        analysis.brand_positioning,
+        analysisParams.brand_name,
+        analysisParams.website_url,
+        analysisParams.offer_details,
+        analysisParams.target_audience,
+        analysisParams.brand_positioning,
         apiKey
       );
 
@@ -267,7 +295,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
     setGeneratingPromptId(concept.id);
     try {
-      const prompt = await generateImagePrompt(clientData, analysis, concept, apiKey);
+      const prompt = await generateImagePrompt(clientData, analysisParams, concept, apiKey);
 
       const { error } = await supabase
         .from('concepts')
@@ -558,9 +586,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     link.click();
   }
 
-  // Filtrer les concepts selon l'onglet actif
   const activeConcepts = concepts.filter(c => c.media_type === activeTab);
-  
   const tofuConcepts = activeConcepts.filter(c => c.funnel_stage === 'TOFU');
   const mofuConcepts = activeConcepts.filter(c => c.funnel_stage === 'MOFU');
   const bofuConcepts = activeConcepts.filter(c => c.funnel_stage === 'BOFU');
@@ -576,7 +602,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
           Retour
         </button>
         
-        {/* ONGLETS */}
         <div className="flex bg-slate-100 p-1 rounded-lg">
           <button
             onClick={() => setActiveTab('video')}
@@ -606,8 +631,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">{analysis.brand_name}</h2>
-            <p className="text-slate-600 text-sm">{analysis.website_url}</p>
+            <h2 className="text-2xl font-bold text-slate-800">{analysisParams.brand_name}</h2>
+            <p className="text-slate-600 text-sm">{analysisParams.website_url}</p>
           </div>
           <div className="flex gap-2">
             {activeConcepts.length > 0 && (
@@ -668,9 +693,89 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
             )}
           </div>
         </div>
-        <div className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">
-          <p className="font-medium mb-1">Informations de l'analyse</p>
-          <p><span className="font-semibold">Audience:</span> {analysis.target_audience}</p>
+
+        {/* PANNEAU ANALYSE DÉPLIABLE */}
+        <div className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden transition-all">
+          <button
+            onClick={() => setIsAnalysisOpen(!isAnalysisOpen)}
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <span className="font-semibold text-slate-700">Analyse & Stratégie (Modifier pour affiner les concepts)</span>
+            </div>
+            {isAnalysisOpen ? (
+              <ChevronUp className="w-5 h-5 text-slate-500" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-slate-500" />
+            )}
+          </button>
+
+          {isAnalysisOpen && (
+            <div className="p-4 border-t border-slate-200 space-y-4 bg-white">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Offre / Produits / Services
+                  </label>
+                  <textarea
+                    value={analysisParams.offer_details}
+                    onChange={(e) => setAnalysisParams({ ...analysisParams, offer_details: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#26B743] focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Cibles prioritaires
+                  </label>
+                  <textarea
+                    value={analysisParams.target_audience}
+                    onChange={(e) => setAnalysisParams({ ...analysisParams, target_audience: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#26B743] focus:border-transparent"
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Positionnement et ton de marque
+                  </label>
+                  <textarea
+                    value={analysisParams.brand_positioning}
+                    onChange={(e) => setAnalysisParams({ ...analysisParams, brand_positioning: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#26B743] focus:border-transparent"
+                    rows={4}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSaveAnalysis}
+                  disabled={isSavingAnalysis}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#26B743] text-white rounded-lg hover:bg-[#1f9336] disabled:bg-slate-400 transition-colors"
+                >
+                  {isSavingAnalysis ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Sauvegarde...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Sauvegarder l'analyse
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Résumé quand fermé */}
+          {!isAnalysisOpen && (
+            <div className="px-4 pb-4 text-sm text-slate-500">
+              <span className="font-semibold">Cible :</span> {analysisParams.target_audience.substring(0, 150)}...
+            </div>
+          )}
         </div>
       </div>
 
@@ -754,6 +859,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
                         return (
                         <tr key={concept.id} className="border-b border-slate-100 hover:bg-slate-50 group">
+                          {/* ... (Colonnes de données identiques) ... */}
                           <td className="py-3 px-4 text-sm text-slate-600 font-medium">
                             {isEditing ? (
                               <textarea
@@ -885,6 +991,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.cta}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, cta: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                                rows={2}
                               />
                             ) : (
                               concept.cta
