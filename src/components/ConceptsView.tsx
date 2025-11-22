@@ -10,7 +10,7 @@ interface ConceptsViewProps {
   onBack: () => void;
 }
 
-type ImageProvider = 'openai' | 'ideogram';
+type ImageProvider = 'openai' | 'ideogram' | 'google';
 
 export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   const { user } = useAuth();
