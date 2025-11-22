@@ -1,9 +1,9 @@
 import OpenAI from "openai";
-import type { Client, Concept, Analysis } from "../lib/supabase"; // Ajout de Analysis
+import type { Client, Concept, Analysis } from "../lib/supabase";
 
 export async function generateImagePrompt(
   client: Client,
-  analysis: Analysis, // Nouveau paramètre
+  analysis: Analysis,
   concept: Concept,
   apiKey: string
 ): Promise<string> {
@@ -67,7 +67,7 @@ STRUCTURE DE TA RÉPONSE (Le prompt final) :
 5. [COMPOSITION & TEXTE] : 
 C'est CRUCIAL. L'image DOIT contenir du texte intégré. Donne les instructions suivantes :
 "L'image inclut du texte typographique intégré de manière réaliste et lisible :
-- Headline (Titre accrocheur) : '${concept.scroll_stopper || concept.hooks[0] || concept.concept}'
+- Headline (Titre accrocheur) : '${concept.scroll_stopper || concept.hooks?.[0] || concept.concept}'
 - Bouton CTA (en bas) : '${concept.cta}'"
 Précise que le texte doit être sans faute d'orthographe, avec une police moderne et lisible.
 
@@ -81,7 +81,7 @@ Sois créatif, précis, et directif. L'image générée doit être prête à êt
       model: "gpt-4o",
       messages: [{ role: "user", content: fullPrompt }],
       temperature: 0.7,
-      max_tokens: 1000, // On réduit un peu les tokens car on veut un prompt concis mais dense
+      max_tokens: 1000,
     });
 
     return response.choices[0].message.content || "";
