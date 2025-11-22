@@ -23,158 +23,94 @@ export default function Auth() {
           redirectTo: `${window.location.origin}`,
         });
         if (error) throw error;
-        setMessage('Un email de réinitialisation a été envoyé à votre adresse.');
+        setMessage('Email envoyé.');
         setEmail('');
       } else if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
       }
     } catch (error: any) {
-      setError(error.message || 'Une erreur est survenue');
+      setError(error.message || 'Erreur');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    // Fond Crème #FAF5ED
     <div className="min-h-screen bg-[#FAF5ED] flex items-center justify-center p-4 font-sans">
-      <div className="max-w-6xl w-full grid md:grid-cols-2 gap-8 items-center">
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#24B745] p-2 rounded-lg shadow-lg">
-              <Sparkles className="w-8 h-8 text-white" />
+      <div className="max-w-5xl w-full grid md:grid-cols-2 gap-12 items-center">
+        
+        {/* Colonne Texte */}
+        <div className="space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="bg-[#24B745] p-3 shadow-[6px_6px_0px_0px_#232323] border-2 border-[#232323]">
+              <Sparkles className="w-8 h-8 text-[#FAF5ED]" />
             </div>
-            <h1 className="text-4xl font-bold text-[#232323]">Freyja Studio</h1>
+            <h1 className="text-5xl font-black text-[#232323] uppercase tracking-tighter">Freyja<br/>Studio</h1>
           </div>
 
-          <p className="text-xl text-[#232323] leading-relaxed">
-            L'intelligence créative au service de votre performance publicitaire.
+          <p className="text-xl text-[#232323] font-medium leading-relaxed border-l-4 border-[#24B745] pl-6">
+            Intelligence créative radicale pour vos campagnes publicitaires.
           </p>
-
-          <div className="space-y-4 text-[#232323]">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#24B745] flex items-center justify-center flex-shrink-0 mt-0.5 text-white text-xs font-bold">1</div>
-              <div>
-                <h3 className="font-bold">Analyse Stratégique</h3>
-                <p className="text-sm text-gray-600">Extraction automatique de l'identité et du positionnement.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#24B745] flex items-center justify-center flex-shrink-0 mt-0.5 text-white text-xs font-bold">2</div>
-              <div>
-                <h3 className="font-bold">Concepts TOFU/MOFU/BOFU</h3>
-                <p className="text-sm text-gray-600">Génération de scripts vidéos et visuels statiques.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#24B745] flex items-center justify-center flex-shrink-0 mt-0.5 text-white text-xs font-bold">3</div>
-              <div>
-                <h3 className="font-bold">Production Visuelle</h3>
-                <p className="text-sm text-gray-600">Génération d'images DALL-E 3 / Ideogram avec prompts experts.</p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* CARTE NOIRE #232323 avec Texte Crème #FAF5ED */}
-        <div className="bg-[#232323] text-[#FAF5ED] rounded-2xl shadow-2xl p-8 border border-[#24B745]/20">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-2">
-              {isForgotPassword ? 'Réinitialiser le mot de passe' : isLogin ? 'Connexion' : 'Créer un compte'}
+        {/* Carte Formulaire : Fond Anthracite, Texte Beige */}
+        <div className="bg-[#232323] text-[#FAF5ED] p-10 shadow-[15px_15px_0px_0px_#24B745] border-4 border-[#232323]">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-2 uppercase tracking-wide text-[#FAF5ED]">
+              {isForgotPassword ? 'Récupération' : isLogin ? 'Connexion' : 'Inscription'}
             </h2>
-            <p className="text-gray-400 text-sm">
-              {isForgotPassword ? 'Recevez un lien de réinitialisation par email' : isLogin ? 'Accédez à votre espace Freyja' : 'Commencez gratuitement'}
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+              <label className="block text-xs font-bold text-[#24B745] uppercase tracking-wider mb-2">Email</label>
               <input
-                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg focus:outline-none focus:border-[#24B745] focus:ring-1 focus:ring-[#24B745] text-[#FAF5ED] placeholder-gray-500 transition-colors"
+                className="w-full px-4 py-3 bg-[#2A2A2A] border-2 border-[#3A3A3A] text-[#FAF5ED] focus:border-[#24B745] focus:bg-[#232323] transition-colors placeholder-[#FAF5ED]/30"
                 placeholder="votre@email.com"
               />
             </div>
 
             {!isForgotPassword && (
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">Mot de passe</label>
+                <label className="block text-xs font-bold text-[#24B745] uppercase tracking-wider mb-2">Mot de passe</label>
                 <input
-                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
-                  className="w-full px-4 py-3 bg-[#2A2A2A] border border-gray-700 rounded-lg focus:outline-none focus:border-[#24B745] focus:ring-1 focus:ring-[#24B745] text-[#FAF5ED] placeholder-gray-500 transition-colors"
+                  className="w-full px-4 py-3 bg-[#2A2A2A] border-2 border-[#3A3A3A] text-[#FAF5ED] focus:border-[#24B745] focus:bg-[#232323] transition-colors placeholder-[#FAF5ED]/30"
                   placeholder="••••••••"
                 />
               </div>
             )}
 
-            {isLogin && !isForgotPassword && (
-              <div className="text-right">
-                <button
-                  type="button"
-                  onClick={() => { setIsForgotPassword(true); setError(''); setMessage(''); }}
-                  className="text-[#24B745] hover:text-[#2ce253] text-sm font-medium transition-colors"
-                >
-                  Mot de passe oublié ?
-                </button>
-              </div>
-            )}
-
-            {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm">{error}</div>}
-            {message && <div className="bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg text-sm">{message}</div>}
+            {error && <div className="bg-red-500/20 border-l-4 border-red-500 text-red-200 px-4 py-3 text-sm font-medium">{error}</div>}
+            {message && <div className="bg-green-500/20 border-l-4 border-green-500 text-green-200 px-4 py-3 text-sm font-medium">{message}</div>}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#24B745] hover:bg-[#1f9e3b] text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
+              className="w-full bg-[#24B745] hover:bg-[#1f9e3b] text-[#FAF5ED] font-black uppercase tracking-widest py-4 px-6 border-2 border-[#24B745] hover:border-[#1f9e3b] transition-all active:translate-y-1"
             >
-              {loading ? (
-                <>
-                  <Loader className="w-5 h-5 animate-spin" />
-                  {isForgotPassword ? 'Envoi...' : isLogin ? 'Connexion...' : 'Création...'}
-                </>
-              ) : (
-                isForgotPassword ? 'Envoyer le lien' : isLogin ? 'Se connecter' : 'Créer mon compte'
-              )}
+              {loading ? '...' : (isForgotPassword ? 'Envoyer' : isLogin ? 'Entrer' : 'Créer')}
             </button>
           </form>
 
-          <div className="mt-6 text-center space-y-2 border-t border-gray-800 pt-4">
-            {isForgotPassword ? (
-              <button
-                onClick={() => { setIsForgotPassword(false); setError(''); setMessage(''); }}
-                className="text-[#24B745] hover:text-[#2ce253] text-sm font-medium"
-              >
-                Retour à la connexion
-              </button>
-            ) : (
-              <button
-                onClick={() => { setIsLogin(!isLogin); setError(''); setMessage(''); }}
-                className="text-gray-400 hover:text-white text-sm transition-colors"
-              >
-                {isLogin ? "Pas encore de compte ? " : 'Déjà un compte ? '}
-                <span className="text-[#24B745] font-medium hover:underline">{isLogin ? "S'inscrire" : 'Se connecter'}</span>
-              </button>
-            )}
+          <div className="mt-8 pt-6 border-t border-[#FAF5ED]/10 text-center">
+            <button
+              onClick={() => { setIsLogin(!isLogin); setIsForgotPassword(false); }}
+              className="text-[#FAF5ED]/60 hover:text-[#24B745] text-sm font-bold uppercase tracking-wide transition-colors"
+            >
+              {isLogin ? "Créer un compte" : 'Se connecter'}
+            </button>
           </div>
         </div>
       </div>
