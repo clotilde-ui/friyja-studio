@@ -9,10 +9,9 @@ export default {
       colors: {
         studio: {
           dark: '#272727',    // Votre fond principal
-          card: '#333333',    // Pour les cartes (légèrement plus clair)
-          light: '#E5E5E5',   // Texte principal
-          dim: '#A0A0A0',     // Texte secondaire
-          accent: '#26B743',  // Votre vert Freyja
+          card: '#333333',    // Fond des cartes
+          light: '#E5E5E5',   // Texte
+          accent: '#26B743',  // Vert Freyja
         }
       }
     },
