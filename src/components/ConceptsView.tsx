@@ -702,7 +702,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-purple-600" />
-              <span className="font-semibold text-slate-700">Analyse & Stratégie (Modifier pour affiner les concepts)</span>
+              <span className="font-semibold text-slate-700">Analyse & Stratégie</span>
             </div>
             {isAnalysisOpen ? (
               <ChevronUp className="w-5 h-5 text-slate-500" />
@@ -915,6 +915,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.marketing_objective}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, marketing_objective: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                                rows={2}
                               />
                             ) : (
                               <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full bg-${color}-100 text-${color}-700`}>
