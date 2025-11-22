@@ -244,7 +244,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
     setGeneratingPromptId(concept.id);
     try {
-      // On passe analysis en plus pour avoir le contexte complet
       const prompt = await generateImagePrompt(clientData, analysis, concept, apiKey);
 
       const { error } = await supabase
@@ -274,6 +273,12 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   async function handleGenerateImage(concept: Concept) {
     const provider = selectedProvider[concept.id] || 'openai';
 
+    // VÉRIFICATION STRICTE : Le prompt doit exister
+    if (!concept.generated_prompt) {
+      alert('Veuillez d\'abord générer un prompt avant de lancer la création de l\'image.');
+      return;
+    }
+
     if (provider === 'openai' && !apiKey) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
@@ -287,54 +292,19 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     setGeneratingImageId(concept.id);
     
     try {
-      let promptToUse = concept.generated_prompt;
-
-      // Si pas de prompt généré, on le génère à la volée
-      if (!promptToUse) {
-        if (!clientData) {
-          // Tentative de rechargement si manquant
-          const { data, error } = await supabase
-            .from('clients')
-            .select('*')
-            .eq('id', analysis.client_id)
-            .single();
-            
-          if (error || !data) throw new Error('Impossible de charger les données client pour générer le prompt');
-          setClientData(data);
-          
-          // Génération du prompt
-          promptToUse = await generateImagePrompt(data, analysis, concept, apiKey);
-        } else {
-          promptToUse = await generateImagePrompt(clientData, analysis, concept, apiKey);
-        }
-
-        // Sauvegarde du prompt généré à la volée
-        await supabase
-          .from('concepts')
-          .update({
-            generated_prompt: promptToUse,
-            prompt_generated_at: new Date().toISOString()
-          })
-          .eq('id', concept.id);
-          
-        // Mise à jour de l'état local pour affichage immédiat
-        setConcepts(prev => prev.map(c => 
-          c.id === concept.id 
-            ? { ...c, generated_prompt: promptToUse, prompt_generated_at: new Date().toISOString() } 
-            : c
-        ));
-      }
+      // UTILISATION STRICTE : On utilise uniquement le prompt affiché
+      const promptToUse = concept.generated_prompt;
 
       let imageUrl: string;
 
       if (provider === 'ideogram') {
         imageUrl = await generateImageIdeogram(
-          promptToUse!, // On envoie le prompt complet
+          promptToUse,
           ideogramApiKey
         );
       } else {
         imageUrl = await generateImage(
-          promptToUse!, // On envoie le prompt complet
+          promptToUse,
           apiKey
         );
       }
@@ -900,8 +870,9 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                   </select>
                                   <button
                                     onClick={() => handleGenerateImage(concept)}
-                                    disabled={generatingImageId === concept.id}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-[#26B743] hover:bg-[#1f9336] text-white rounded transition-colors disabled:opacity-50"
+                                    disabled={generatingImageId === concept.id || !concept.generated_prompt}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-[#26B743] hover:bg-[#1f9336] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={!concept.generated_prompt ? "Générez d'abord un prompt" : "Générer l'image"}
                                   >
                                     {generatingImageId === concept.id ? (
                                       <>
