@@ -43,9 +43,10 @@ export default function AnalysisForm({ client, onBack, onAnalysisCreated }: Anal
         brandMood: result.brandMood || prev.brandMood,
       }));
       setScraped(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Scraping error:', error);
-      alert('Erreur lors de l\'analyse du site. Vérifiez l\'URL.');
+      const errorMessage = error?.message || 'Erreur inconnue';
+      alert(`Erreur lors de l'analyse du site : ${errorMessage}`);
     } finally {
       setLoading(false);
     }

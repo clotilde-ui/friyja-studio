@@ -71,3 +71,21 @@ export interface Settings {
   created_at: string;
   updated_at: string;
 }
+
+export interface FeatureRequest {
+  id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  upvotes_count: number;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeatureRequestVote {
+  id: string;
+  feature_request_id: string;
+  user_id: string;
+  created_at: string;
+}

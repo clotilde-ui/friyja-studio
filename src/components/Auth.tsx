@@ -29,8 +29,20 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        // Désactiver la validation d'email
+        const { data, error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            // Ne pas envoyer d'email de confirmation (configuré dans Supabase)
+          }
+        });
         if (error) throw error;
+        // Si l'inscription réussit, l'utilisateur est automatiquement connecté
+        // (si la confirmation d'email est désactivée dans Supabase)
+        if (data.user) {
+          setMessage('Compte créé avec succès ! Vous êtes maintenant connecté.');
+        }
       }
     } catch (error: any) {
       setError(error.message || 'Erreur');

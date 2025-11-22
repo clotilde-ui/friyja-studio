@@ -3,7 +3,7 @@ import { supabase, Analysis, Concept, Client } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram, generateImageGoogle } from '../services/openaiService';
 import { generateImagePrompt } from '../services/promptGenerationService';
-import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Video, ChevronDown, ChevronUp, Save } from 'lucide-react';
+import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Video, ChevronDown, ChevronUp, Save, PenTool } from 'lucide-react';
 
 interface ConceptsViewProps {
   analysis: Analysis;
@@ -30,11 +30,16 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   const [generatingImageId, setGeneratingImageId] = useState<string | null>(null);
   const [generatingPromptId, setGeneratingPromptId] = useState<string | null>(null);
   
-  // States d'édition
+  // States d'édition standard
   const [editingConceptId, setEditingConceptId] = useState<string | null>(null);
   const [editedConcept, setEditedConcept] = useState<Partial<Concept>>({});
   const [selectedProvider, setSelectedProvider] = useState<Record<string, ImageProvider>>({});
   
+  // --- NOUVEAU : States pour l'édition du PROMPT (Modal) ---
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const [editingPromptData, setEditingPromptData] = useState<{id: string, text: string} | null>(null);
+  const [isSavingPrompt, setIsSavingPrompt] = useState(false);
+
   // States pour les clés API et données
   const [apiKey, setApiKey] = useState('');
   const [ideogramApiKey, setIdeogramApiKey] = useState('');
@@ -49,7 +54,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     loadClientData();
   }, [analysis.id]);
 
-  // Au chargement, s'il n'y a que des concepts statiques, on bascule sur l'onglet statique
   useEffect(() => {
     if (concepts.length > 0) {
       const hasVideo = concepts.some(c => c.media_type === 'video');
@@ -62,7 +66,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
   async function loadApiKey() {
     if (!user) return;
-
     try {
       const { data } = await supabase
         .from('settings')
@@ -119,7 +122,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       const { error } = await supabase
         .from('analyses')
         .update({
-          brand_name: analysisParams.brand_name, // Mise à jour du nom
+          brand_name: analysisParams.brand_name,
           offer_details: analysisParams.offer_details,
           target_audience: analysisParams.target_audience,
           brand_positioning: analysisParams.brand_positioning,
@@ -177,12 +180,12 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
   }
 
+  // --- GENERATION FUNCTIONS (Video/Static) ---
   async function handleGenerateVideo() {
     if (!apiKey) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
     }
-
     setGeneratingVideo(true);
     try {
       const generatedConcepts = await generateVideoConcepts(
@@ -193,7 +196,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         analysisParams.brand_positioning,
         apiKey
       );
-
       const conceptsToInsert = generatedConcepts.map(c => ({
         analysis_id: analysis.id,
         funnel_stage: c.funnel_stage,
@@ -212,12 +214,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         media_type: c.media_type,
       }));
 
-      const { error } = await supabase
-        .from('concepts')
-        .insert(conceptsToInsert);
-
+      const { error } = await supabase.from('concepts').insert(conceptsToInsert);
       if (error) throw error;
-
       await loadConcepts();
       setActiveTab('video');
     } catch (error) {
@@ -233,7 +231,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
     }
-
     setGeneratingStatic(true);
     try {
       const generatedConcepts = await generateStaticConcepts(
@@ -244,7 +241,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         analysisParams.brand_positioning,
         apiKey
       );
-
       const conceptsToInsert = generatedConcepts.map(c => ({
         analysis_id: analysis.id,
         funnel_stage: c.funnel_stage,
@@ -263,12 +259,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         media_type: c.media_type,
       }));
 
-      const { error } = await supabase
-        .from('concepts')
-        .insert(conceptsToInsert);
-
+      const { error } = await supabase.from('concepts').insert(conceptsToInsert);
       if (error) throw error;
-
       await loadConcepts();
       setActiveTab('static');
     } catch (error) {
@@ -284,20 +276,16 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
     }
-
     if (!clientData) {
       await loadClientData();
     }
-
     if (!clientData) {
       alert('Impossible de charger les données du client');
       return;
     }
-
     setGeneratingPromptId(concept.id);
     try {
       const prompt = await generateImagePrompt(clientData, analysisParams, concept, apiKey);
-
       const { error } = await supabase
         .from('concepts')
         .update({
@@ -329,24 +317,20 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       alert('Veuillez d\'abord générer un prompt avant de lancer la création de l\'image.');
       return;
     }
-
     if (provider === 'openai' && !apiKey) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
     }
-
     if (provider === 'ideogram' && !ideogramApiKey) {
       alert('Veuillez configurer votre clé API Ideogram dans les paramètres');
       return;
     }
-
     if (provider === 'google' && !googleApiKey) {
       alert('Veuillez configurer votre clé API Google dans les paramètres');
       return;
     }
 
     setGeneratingImageId(concept.id);
-    
     try {
       const promptToUse = concept.generated_prompt;
       let imageUrl: string;
@@ -383,9 +367,10 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
   }
 
+  // --- FONCTIONS POUR LA GESTION DES IMAGES ET MODIFICATIONS ---
+
   async function handleDownloadImage(concept: Concept) {
     if (!concept.image_url) return;
-
     if (concept.image_url.startsWith('data:')) {
         const link = document.createElement('a');
         link.href = concept.image_url;
@@ -395,25 +380,16 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         document.body.removeChild(link);
         return;
     }
-
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const downloadFunctionUrl = `${supabaseUrl}/functions/v1/download-image`;
-
     try {
       const response = await fetch(downloadFunctionUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseAnonKey}` },
         body: JSON.stringify({ imageUrl: concept.image_url }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to download image');
-      }
-
+      if (!response.ok) throw new Error('Failed to download image');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -429,6 +405,38 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
   }
 
+  // --- LOGIQUE EDITION PROMPT (MODALE) ---
+  function openPromptModal(concept: Concept) {
+    if (!concept.generated_prompt) return;
+    setEditingPromptData({ id: concept.id, text: concept.generated_prompt });
+    setIsPromptModalOpen(true);
+  }
+
+  async function handleSavePrompt() {
+    if (!editingPromptData) return;
+    setIsSavingPrompt(true);
+    try {
+      const { error } = await supabase
+        .from('concepts')
+        .update({ generated_prompt: editingPromptData.text })
+        .eq('id', editingPromptData.id);
+
+      if (error) throw error;
+
+      setConcepts(prev => prev.map(c => 
+        c.id === editingPromptData.id ? { ...c, generated_prompt: editingPromptData.text } : c
+      ));
+      setIsPromptModalOpen(false);
+      setEditingPromptData(null);
+    } catch (error) {
+      console.error("Error updating prompt", error);
+      alert("Erreur lors de la sauvegarde du prompt.");
+    } finally {
+      setIsSavingPrompt(false);
+    }
+  }
+
+  // --- LOGIQUE EDITION CONCEPT CLASSIQUE ---
   function startEditing(concept: Concept) {
     setEditingConceptId(concept.id);
     setEditedConcept({ ...concept });
@@ -436,7 +444,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
   async function saveEdit() {
     if (!editingConceptId || !editedConcept) return;
-
     try {
       const { error } = await supabase
         .from('concepts')
@@ -457,11 +464,9 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         .eq('id', editingConceptId);
 
       if (error) throw error;
-
       setConcepts(concepts.map(c =>
         c.id === editingConceptId ? { ...c, ...editedConcept } : c
       ));
-
       setEditingConceptId(null);
       setEditedConcept({});
     } catch (error) {
@@ -481,7 +486,9 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     setEditedConcept({ ...editedConcept, hooks: newHooks });
   }
 
+  // --- EXPORTS ---
   function exportToCSV() {
+    // ... (Logic remains unchanged)
     const activeConcepts = concepts.filter(c => c.media_type === activeTab);
     const headers = activeTab === 'video' 
       ? ['Stage', 'Concept', 'Format', 'Hook 1', 'Hook 2', 'Hook 3', 'Objectif', 'Scroll Stopper', 'Problème', 'Solution', 'Bénéfices', 'Preuve', 'CTA', 'Script']
@@ -497,37 +504,13 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         c.hooks[2] || '',
         c.marketing_objective,
       ];
-      
       if (activeTab === 'video') {
-        return [
-          ...base,
-          c.scroll_stopper,
-          c.problem,
-          c.solution,
-          c.benefits,
-          c.proof,
-          c.cta,
-          c.script_outline
-        ];
+        return [ ...base, c.scroll_stopper, c.problem, c.solution, c.benefits, c.proof, c.cta, c.script_outline ];
       } else {
-        return [
-          ...base,
-          c.problem,
-          c.solution,
-          c.benefits,
-          c.proof,
-          c.cta,
-          c.suggested_visual,
-          c.generated_prompt || ''
-        ];
+        return [ ...base, c.problem, c.solution, c.benefits, c.proof, c.cta, c.suggested_visual, c.generated_prompt || '' ];
       }
     });
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
-
+    const csvContent = [ headers.join(','), ...rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',')) ].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -536,6 +519,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   }
 
   function exportToText() {
+    // ... (Logic remains unchanged)
     const activeConcepts = concepts.filter(c => c.media_type === activeTab);
     let content = `CONCEPTS ${activeTab.toUpperCase()} - ${analysisParams.brand_name}\n`;
     content += `Site: ${analysisParams.website_url}\n`;
@@ -545,41 +529,31 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     ['TOFU', 'MOFU', 'BOFU'].forEach(stage => {
       const stageConcepts = activeConcepts.filter(c => c.funnel_stage === stage);
       if (stageConcepts.length === 0) return;
-
       content += `\n### ${stage} - ${stageConcepts.length} concepts\n\n`;
-
       stageConcepts.forEach((c, i) => {
         content += `## Concept ${i + 1}: ${c.concept}\n\n`;
         content += `Format: ${c.format}\n`;
         content += `Objectif: ${c.marketing_objective}\n\n`;
         content += `Hooks:\n`;
-        c.hooks.forEach((h, j) => {
-          content += `  ${j + 1}. ${h}\n`;
-        });
+        c.hooks.forEach((h, j) => content += `  ${j + 1}. ${h}\n`);
         
         if (activeTab === 'video') {
           content += `\nScroll Stopper:\n${c.scroll_stopper}\n\n`;
         }
-        
         content += `Problème:\n${c.problem}\n\n`;
         content += `Solution:\n${c.solution}\n\n`;
         content += `Bénéfices:\n${c.benefits}\n\n`;
         content += `Preuve:\n${c.proof}\n\n`;
         content += `CTA:\n${c.cta}\n\n`;
-        
         if (activeTab === 'static') {
           content += `Visuel suggéré:\n${c.suggested_visual}\n\n`;
-          if (c.generated_prompt) {
-            content += `Prompt:\n${c.generated_prompt}\n\n`;
-          }
+          if (c.generated_prompt) content += `Prompt:\n${c.generated_prompt}\n\n`;
         } else {
           content += `Script:\n${c.script_outline}\n\n`;
         }
-        
         content += '-'.repeat(80) + '\n\n';
       });
     });
-
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -610,11 +584,10 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         </div>
       </div>
 
-      {/* CARTE STRATÉGIE (FOND NOIR) */}
+      {/* CARTE STRATÉGIE */}
       <div className="bg-[#232323] p-6 mb-6 border-l-4 border-[#24B745] shadow-md rounded-none">
         <div className="flex items-center justify-between mb-4">
           <div>
-            {/* NOM ANALYSE : AJOUT DU CHAMP D'EDITION ICI SI BESOIN, SINON AFFICHAGE SIMPLE */}
             <h2 className="text-2xl font-black text-[#FAF5ED] uppercase tracking-tighter">{analysisParams.brand_name}</h2>
             <p className="text-[#FAF5ED]/60 text-sm font-mono">{analysisParams.website_url}</p>
           </div>
@@ -629,7 +602,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                 </button>
               </>
             )}
-            
             {activeTab === 'video' ? (
               <button onClick={handleGenerateVideo} disabled={generatingVideo || !apiKey} className="flex items-center gap-2 px-6 py-3 bg-[#24B745] text-[#FAF5ED] hover:bg-[#1f9e3b] disabled:opacity-50 transition-colors font-bold uppercase text-xs tracking-widest rounded-none">
                 {generatingVideo ? <Loader className="w-4 h-4 animate-spin" /> : <><Video className="w-4 h-4" /> Générer Vidéos</>}
@@ -642,7 +614,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
           </div>
         </div>
 
-        {/* PANNEAU DÉPLIABLE ANALYSE (Style Dark) */}
+        {/* PANNEAU DÉPLIABLE ANALYSE */}
         <div className="bg-[#2A2A2A] border border-[#3A3A3A] overflow-hidden rounded-none">
           <button onClick={() => setIsAnalysisOpen(!isAnalysisOpen)} className="w-full flex items-center justify-between p-3 text-left hover:bg-[#333] transition-colors rounded-none">
             <div className="flex items-center gap-2">
@@ -651,18 +623,12 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
             </div>
             {isAnalysisOpen ? <ChevronUp className="w-4 h-4 text-[#FAF5ED]" /> : <ChevronDown className="w-4 h-4 text-[#FAF5ED]" />}
           </button>
-
           {isAnalysisOpen && (
             <div className="p-4 border-t border-[#3A3A3A] space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-[10px] font-bold text-[#24B745] uppercase tracking-wider mb-1">Nom de l'analyse</label>
-                  <input
-                    type="text"
-                    value={analysisParams.brand_name}
-                    onChange={(e) => setAnalysisParams({ ...analysisParams, brand_name: e.target.value })}
-                    className="w-full bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] p-2 text-sm focus:border-[#24B745] rounded-none"
-                  />
+                  <input type="text" value={analysisParams.brand_name} onChange={(e) => setAnalysisParams({ ...analysisParams, brand_name: e.target.value })} className="w-full bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] p-2 text-sm focus:border-[#24B745] rounded-none" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-[10px] font-bold text-[#24B745] uppercase tracking-wider mb-1">Offre</label>
@@ -687,7 +653,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         </div>
       </div>
 
-      {/* TABLEAU DES CONCEPTS (FOND NOIR) */}
+      {/* TABLEAU DES CONCEPTS */}
       {loading ? (
         <div className="flex justify-center h-64 items-center"><Loader className="w-8 h-8 animate-spin text-[#232323]" /></div>
       ) : activeConcepts.length === 0 ? (
@@ -697,9 +663,9 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       ) : (
         <div className="space-y-8">
           {[
-            { stage: 'TOFU', concepts: tofuConcepts, color: '#24B745', label: 'Top of Funnel' },
-            { stage: 'MOFU', concepts: mofuConcepts, color: '#A855F7', label: 'Middle of Funnel' },
-            { stage: 'BOFU', concepts: bofuConcepts, color: '#22C55E', label: 'Bottom of Funnel' },
+            { stage: 'TOFU', concepts: tofuConcepts, label: 'Top of Funnel' },
+            { stage: 'MOFU', concepts: mofuConcepts, label: 'Middle of Funnel' },
+            { stage: 'BOFU', concepts: bofuConcepts, label: 'Bottom of Funnel' },
           ].map(({ stage, concepts: stageConcepts, label }) => (
             stageConcepts.length > 0 && (
               <div key={stage} className="bg-[#232323] p-0 shadow-xl border border-[#232323] overflow-hidden rounded-none">
@@ -718,7 +684,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                         <th className="p-4 min-w-[100px]">Objectif</th>
                         <th className="p-4 min-w-[200px]">Problème / Solution</th>
                         <th className="p-4 min-w-[150px]">CTA</th>
-                        
                         {activeTab === 'video' ? (
                           <>
                             <th className="p-4 min-w-[200px]">Scroll Stopper</th>
@@ -727,11 +692,9 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                         ) : (
                           <>
                              <th className="p-4 min-w-[200px]">Visuel Suggéré</th>
-                             {/* COLONNE STUDIO CRÉA (Sticky) */}
                              <th className="p-4 min-w-[320px] sticky right-[50px] bg-[#1A1A1A] z-10 border-l-4 border-[#24B745]">Studio Créa</th>
                           </>
                         )}
-                        
                         <th className="w-[50px] sticky right-0 bg-[#1A1A1A] z-10 border-l border-[#3A3A3A]"></th>
                       </tr>
                     </thead>
@@ -784,7 +747,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                             <>
                               <td className="p-4 align-top text-xs">{c.suggested_visual}</td>
                               
-                              {/* COLONNE STUDIO STICKY (FOND NOIR, BORDURE VERTE) */}
+                              {/* COLONNE STUDIO STICKY */}
                               <td className="p-4 align-top sticky right-[50px] bg-[#232323] group-hover:bg-[#2A2A2A] border-l-4 border-[#24B745] z-10 shadow-[-10px_0_20px_-5px_rgba(0,0,0,0.5)]">
                                 <div className="space-y-3">
                                   <button onClick={() => handleGeneratePrompt(c)} disabled={generatingPromptId===c.id} className="w-full py-2 bg-[#24B745]/10 hover:bg-[#24B745] text-[#24B745] hover:text-[#FAF5ED] border border-[#24B745] transition-colors text-[10px] font-bold uppercase tracking-widest rounded-none">
@@ -793,7 +756,14 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                   
                                   {c.generated_prompt && (
                                     <div className="bg-[#1A1A1A] p-3 border border-[#3A3A3A]">
-                                      <p className="text-[10px] text-[#FAF5ED]/60 line-clamp-3 mb-2 font-mono">{c.generated_prompt}</p>
+                                      {/* ZONE DU PROMPT AVEC BOUTON EDIT */}
+                                      <div className="relative group/prompt mb-2">
+                                        <p className="text-[10px] text-[#FAF5ED]/60 line-clamp-3 font-mono pr-5">{c.generated_prompt}</p>
+                                        <button onClick={() => openPromptModal(c)} className="absolute top-0 right-0 text-[#24B745] hover:text-white p-1" title="Modifier le prompt">
+                                          <Edit2 className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                      
                                       <button onClick={() => {navigator.clipboard.writeText(c.generated_prompt!); alert('Copié !')}} className="text-[9px] text-[#24B745] hover:underline mb-2 block text-right">Copier tout</button>
                                       
                                       {c.image_url ? (
@@ -846,11 +816,45 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         </div>
       )}
       
-      {/* MODALE IMAGE */}
+      {/* MODALE VISUALISATION IMAGE */}
       {modalImageUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setModalImageUrl(null)}>
           <div className="relative max-w-7xl max-h-[90vh]">
             <img src={modalImageUrl} className="max-w-full max-h-full object-contain border-2 border-[#24B745]" />
+          </div>
+        </div>
+      )}
+
+      {/* MODALE EDITION PROMPT */}
+      {isPromptModalOpen && editingPromptData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+          <div className="bg-[#232323] border border-[#24B745] w-full max-w-3xl shadow-2xl p-6 relative rounded-none">
+            <button onClick={() => setIsPromptModalOpen(false)} className="absolute top-4 right-4 text-[#FAF5ED]/50 hover:text-[#FAF5ED]">
+              <X className="w-6 h-6" />
+            </button>
+            
+            <div className="flex items-center gap-2 mb-4 text-[#24B745]">
+              <PenTool className="w-5 h-5" />
+              <h3 className="text-lg font-bold uppercase tracking-widest">Modifier le Prompt</h3>
+            </div>
+            
+            <div className="mb-4">
+              <textarea 
+                value={editingPromptData.text} 
+                onChange={(e) => setEditingPromptData({...editingPromptData, text: e.target.value})} 
+                className="w-full h-64 bg-[#1A1A1A] border border-[#3A3A3A] text-[#FAF5ED] p-4 font-mono text-sm focus:border-[#24B745] outline-none resize-none rounded-none"
+                placeholder="Entrez votre prompt ici..."
+              />
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setIsPromptModalOpen(false)} className="px-6 py-2 border border-[#3A3A3A] text-[#FAF5ED] hover:bg-[#3A3A3A] font-bold uppercase text-xs tracking-wider transition-colors rounded-none">
+                Annuler
+              </button>
+              <button onClick={handleSavePrompt} disabled={isSavingPrompt} className="px-6 py-2 bg-[#24B745] text-[#FAF5ED] hover:bg-[#1f9e3b] font-bold uppercase text-xs tracking-wider transition-colors rounded-none disabled:opacity-50">
+                {isSavingPrompt ? 'Sauvegarde...' : 'Enregistrer'}
+              </button>
+            </div>
           </div>
         </div>
       )}

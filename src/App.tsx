@@ -10,7 +10,7 @@ import NewClientModal from './components/NewClientModal';
 import ClientDetail from './components/ClientDetail';
 import FeatureRequests from './components/FeatureRequests';
 import AdminDashboard from './components/AdminDashboard';
-import { Client, Analysis, supabase } from './lib/supabase';
+import { Client, Analysis } from './lib/supabase';
 
 type View = 'clients' | 'analysis' | 'concepts' | 'settings' | 'clientDetail' | 'features' | 'admin';
 
@@ -27,9 +27,14 @@ function App() {
   }, [user]);
 
   async function checkAdminStatus() {
-    if (!user) return;
-    const { data } = await supabase.from('settings').select('is_admin').eq('user_id', user.id).maybeSingle();
-    setIsAdmin(data?.is_admin || false);
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    // L'admin est clotilde@deux.io (comparaison insensible à la casse)
+    const isAdminEmail = user.email?.toLowerCase() === 'clotilde@deux.io';
+    setIsAdmin(isAdminEmail);
+    console.log('Admin status:', isAdminEmail, 'Email:', user.email);
   }
 
   if (loading) {
@@ -103,8 +108,20 @@ function App() {
           {view === 'analysis' && selectedClient && <AnalysisForm client={selectedClient} onBack={() => setView('clientDetail')} onAnalysisCreated={handleAnalysisCreated} />}
           {view === 'concepts' && selectedAnalysis && <ConceptsView analysis={selectedAnalysis} onBack={handleBackToAnalysis} />}
           {view === 'settings' && <Settings onBack={handleBackToClients} />}
-          {view === 'features' && <FeatureRequests onBack={handleBackToClients} />}
-          {view === 'admin' && <AdminDashboard onBack={handleBackToClients} />}
+          {view === 'features' && <FeatureRequests onBack={handleBackToClients} isAdmin={isAdmin} />}
+          {view === 'admin' && isAdmin && <AdminDashboard onBack={handleBackToClients} />}
+          {view === 'admin' && !isAdmin && (
+            <div className="max-w-4xl mx-auto p-8 bg-[#232323] text-[#FAF5ED] border-l-4 border-red-500">
+              <h1 className="text-3xl font-black uppercase mb-4">Accès refusé</h1>
+              <p className="opacity-60">Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
+              <button
+                onClick={handleBackToClients}
+                className="mt-6 px-4 py-2 bg-[#24B745] hover:bg-[#1f9e3b] text-[#FAF5ED] font-bold uppercase text-xs tracking-widest transition-colors"
+              >
+                Retour à l'accueil
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
