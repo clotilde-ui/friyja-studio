@@ -13,35 +13,37 @@ export async function generateImagePrompt(
   });
 
   // Construction intelligente du contexte de marque
-  // Si les couleurs ne sont pas définies, on demande à l'IA de les déduire du positionnement
-  const brandColors = client.primary_color 
-    ? `- Primaire : ${client.primary_color}
-       - Secondaire : ${client.secondary_color || "À définir selon harmonie"}
-       - Sombre : ${client.dark_color || "À définir"}
-       - Claire : ${client.light_color || "À définir"}`
-    : "Non définies spécifiquement. À DÉDUIRE impérativement du positionnement de la marque (ex: Luxe = Noir/Or, Bio = Vert/Beige, Tech = Bleu électrique/Gris).";
+  // Utilisation de la couleur primaire et secondaire si elles sont définies
+  const primaryColor = client.primary_color || '#24B745'; // Vert par défaut
+  const secondaryColor = client.secondary_color || '#232323'; // Anthracite par défaut
 
-  const brandMood = client.brand_mood || `À DÉDUIRE du positionnement : "${analysis.brand_positioning}"`;
+  const brandColors = client.primary_color 
+    ? `- Palette principale : ${primaryColor} (Couleur dominante et accents), ${secondaryColor} (Contraste ou fond)
+       - Ambiance : Vise la charte de marque (couleurs et humeur) pour l'intégration typographique et les éléments graphiques.`
+    : `- Palette non définie. DÉDUIRE les couleurs dominantes du Mood : "${client.brand_mood || 'Moderne'}" et du Positionnement : "${analysis.brand_positioning}".`;
+
+  const brandMood = client.brand_mood || `Tonalité publicitaire, ${analysis.brand_positioning.split(' ').slice(0, 3).join(', ')}`;
 
   const fullPrompt = `
-Tu es un Directeur Artistique Expert spécialisé dans la publicité (Meta Ads / Instagram / LinkedIn).
-Ton objectif est de rédiger un PROMPT DE GÉNÉRATION D'IMAGE (pour DALL-E 3 ou Ideogram) extrêmement détaillé et performant.
+Tu es un Directeur Artistique Expert spécialisé dans la publicité (Meta Ads / TikTok / Instagram / LinkedIn).
+Ton objectif est de rédiger un PROMPT DE GÉNÉRATION D'IMAGE (pour DALL-E 3 ou IMAGEN) extrêmement détaillé et performant, axé sur la conversion publicitaire.
 
-Tu disposes des données brutes suivantes, que tu dois interpréter pour combler les manques éventuels :
+Tu dois impérativement t'assurer que le visuel créé :
+1. Est immédiatement compréhensible et stoppe le scroll.
+2. Respecte l'identité visuelle de la marque.
+3. Intègre le texte marketing directement sur l'image (Headline et CTA).
 
 DONNÉES MARQUE & ANALYSE :
 - Nom : ${client.name}
-- Site : ${analysis.website_url}
-- Secteur/Offre : ${analysis.offer_details}
+- Offre : ${analysis.offer_details}
 - Cible : ${analysis.target_audience}
 - Positionnement : ${analysis.brand_positioning}
-- Identité Visuelle (Couleurs) : ${brandColors}
+- Identité Visuelle : ${brandColors}
 - Ambiance (Mood) : ${brandMood}
 
 DONNÉES DU CONCEPT CRÉATIF :
 - Stage Funnel : ${concept.funnel_stage}
 - Idée : ${concept.concept}
-- Format : ${concept.format}
 - Scroll Stopper (Elément visuel fort) : ${concept.scroll_stopper}
 - Visuel suggéré initialement : ${concept.suggested_visual}
 - CTA : ${concept.cta}
@@ -49,31 +51,25 @@ DONNÉES DU CONCEPT CRÉATIF :
 ---
 
 TA MISSION :
-Rédige un prompt final structuré pour un IA génératrice d'image. 
-Si une information visuelle manque (ex: couleur), DÉDUIS-LA de manière logique par rapport au secteur d'activité et à la cible (ex: ne mets pas du rose fluo pour une banque privée).
+Rédige un prompt final structuré pour un IA génératrice d'image.
 
 STRUCTURE DE TA RÉPONSE (Le prompt final) :
+(Commence directement par la description, sans titres).
 
-(Ne mets pas de titre ou de blabla avant, commence direct par la description).
+1. [STYLE VISUEL] : Décris le style visuel précis. Exemples: "Photographie publicitaire haute résolution 8k", "Rendu 3D cinématique isométrique", "Illustration style Flat Design moderne", "Style UGC (User Generated Content) authentique", "Minimaliste, style brutaliste/anthracite".
 
-1. [RÔLE & FORMAT] : "Une photographie professionnelle publicitaire format carré 1080x1080..." ou "Une illustration 3D high-end..." selon ce qui convient le mieux au concept.
+2. [SUJET & COMPOSITION] : Décris la scène centrale avec précision, en utilisant le 'Scroll Stopper' et le 'Visuel suggéré'. La composition doit être dynamique et axée sur le sujet principal (un seul sujet fort est mieux).
 
-2. [SUJET PRINCIPAL] : Décris la scène centrale avec précision. Qui ? Quoi ? Action ? (Utilise le "Scroll Stopper" et le "Visuel suggéré").
+3. [ÉCLAIRAGE & AMBIANCE] : Décris l'éclairage pour coller au 'Mood'. Exemples : "Éclairage de studio professionnel, doux et contrasté", "Lumière naturelle dorée (Golden Hour)", "Néon cyberpunk sur fond sombre". Le mood doit être "${brandMood}".
 
-3. [DÉCORS & LUMIÈRE] : Décris l'environnement. L'éclairage (cinématique, studio, naturel, golden hour...). L'ambiance doit coller au mood "${brandMood}".
+4. [PALETTE DE COULEURS] : Impose les codes couleurs HEX (en notation hexadécimale) en lien avec la marque: "Palette de couleurs dominée par ${primaryColor} et ${secondaryColor}."
 
-4. [PALETTE DE COULEURS] : Impose les couleurs de la marque ou celles que tu as déduites.
-
-5. [COMPOSITION & TEXTE] : 
-C'est CRUCIAL. L'image DOIT contenir du texte intégré. Donne les instructions suivantes :
-"L'image inclut du texte typographique intégré de manière réaliste et lisible :
+5. [TYPOGRAPHIE INTÉGRÉE (CRUCIAL)] : L'image doit avoir du texte incrusté pour être une publicité. Indique :
+"L'image intègre de manière réaliste et lisible un texte typographique moderne (sans erreur) :
 - Headline (Titre accrocheur) : '${concept.scroll_stopper || concept.hooks?.[0] || concept.concept}'
-- Bouton CTA (en bas) : '${concept.cta}'"
-Précise que le texte doit être sans faute d'orthographe, avec une police moderne et lisible.
+- Bouton CTA (en bas, sur un bouton contrasté en ${primaryColor}) : '${concept.cta}'"
 
-6. [STYLE VISUEL] : "Rendu photoréaliste 8k", "Style corporate memphis", "UGC style", etc.
-
-Sois créatif, précis, et directif. L'image générée doit être prête à être sponsorisée.
+6. [FORMAT] : Termine par le format: "Format carré 1:1, prêt pour Meta Ads."
 `;
 
   try {

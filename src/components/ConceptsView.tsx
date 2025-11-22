@@ -3,7 +3,7 @@ import { supabase, Analysis, Concept, Client } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram, generateImageGoogle } from '../services/openaiService';
 import { generateImagePrompt } from '../services/promptGenerationService';
-import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Copy, Video, ChevronDown, ChevronUp, Save } from 'lucide-react';
+import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Video, ChevronDown, ChevronUp, Save } from 'lucide-react';
 
 interface ConceptsViewProps {
   analysis: Analysis;
@@ -799,7 +799,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                       {c.image_url ? (
                                         <div className="relative group/img">
                                           <img src={c.image_url} className="w-full h-32 object-cover border border-[#3A3A3A]" />
-                                          <button onClick={() => setModalImageUrl(c.image_url)} className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest transition-opacity">Agrandir</button>
+                                          <button onClick={() => setModalImageUrl(c.image_url || null)} className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest transition-opacity">Agrandir</button>
                                           <button onClick={() => handleDownloadImage(c)} className="absolute top-2 right-2 bg-[#232323] p-1 hover:text-[#24B745]"><DownloadIcon className="w-4 h-4" /></button>
                                         </div>
                                       ) : (
