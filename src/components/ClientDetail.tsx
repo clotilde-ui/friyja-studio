@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, Client, Analysis } from '../lib/supabase';
-import { ArrowLeft, Plus, Calendar, ChevronRight, Trash2, Search } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, ChevronRight, Trash2, Search, Edit2, Save, X } from 'lucide-react';
 
 interface ClientDetailProps {
   client: Client;
@@ -9,13 +9,30 @@ interface ClientDetailProps {
   onNewAnalysis: () => void;
 }
 
-export default function ClientDetail({ client, onBack, onSelectAnalysis, onNewAnalysis }: ClientDetailProps) {
+export default function ClientDetail({ client: initialClient, onBack, onSelectAnalysis, onNewAnalysis }: ClientDetailProps) {
+  // On utilise un state local pour le client afin de pouvoir mettre à jour l'UI instantanément
+  const [client, setClient] = useState<Client>(initialClient);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // États pour l'édition de l'identité
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    primary_color: initialClient.primary_color || '',
+    secondary_color: initialClient.secondary_color || '',
+    brand_mood: initialClient.brand_mood || ''
+  });
+
   useEffect(() => {
     loadAnalyses();
-  }, [client.id]);
+    // Reset des données si le client change via les props
+    setClient(initialClient);
+    setEditForm({
+      primary_color: initialClient.primary_color || '',
+      secondary_color: initialClient.secondary_color || '',
+      brand_mood: initialClient.brand_mood || ''
+    });
+  }, [initialClient.id]);
 
   async function loadAnalyses() {
     try {
@@ -45,6 +62,28 @@ export default function ClientDetail({ client, onBack, onSelectAnalysis, onNewAn
     } catch (error) {
       console.error('Error deleting analysis:', error);
       alert('Erreur lors de la suppression');
+    }
+  }
+
+  async function saveIdentity() {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({
+          primary_color: editForm.primary_color,
+          secondary_color: editForm.secondary_color,
+          brand_mood: editForm.brand_mood
+        })
+        .eq('id', client.id);
+
+      if (error) throw error;
+
+      // Mise à jour locale
+      setClient({ ...client, ...editForm });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating client:', error);
+      alert('Erreur lors de la mise à jour');
     }
   }
 
@@ -81,37 +120,117 @@ export default function ClientDetail({ client, onBack, onSelectAnalysis, onNewAn
         </button>
       </div>
 
-      {/* SECTION IDENTITÉ VISUELLE (Carte Sombre) */}
-      <div className="bg-[#232323] p-6 mb-10 border-l-4 border-[#24B745] shadow-md">
-        <h3 className="text-[#FAF5ED] font-bold uppercase tracking-widest text-xs mb-6 border-b border-[#FAF5ED]/10 pb-2">
-          Identité Visuelle
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Primaire</p>
-            <div className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 border border-[#FAF5ED]/20"
-                style={{ backgroundColor: client.primary_color || '#000' }}
-              ></div>
-              <span className="text-[#FAF5ED] font-mono text-sm">{client.primary_color || 'N/A'}</span>
+      {/* SECTION IDENTITÉ VISUELLE (MODIFIABLE) */}
+      <div className="bg-[#232323] p-6 mb-10 border-l-4 border-[#24B745] shadow-md group relative">
+        <div className="flex items-center justify-between mb-6 border-b border-[#FAF5ED]/10 pb-2">
+          <h3 className="text-[#FAF5ED] font-bold uppercase tracking-widest text-xs">
+            Identité Visuelle
+          </h3>
+          {!isEditing ? (
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="text-[#FAF5ED]/30 hover:text-[#24B745] transition-colors p-1"
+              title="Modifier l'identité"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={saveIdentity}
+                className="text-[#24B745] hover:text-[#1f9e3b] p-1 bg-[#FAF5ED]/10"
+                title="Sauvegarder"
+              >
+                <Save className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="text-red-400 hover:text-red-300 p-1"
+                title="Annuler"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-          </div>
-          <div>
-            <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Secondaire</p>
-            <div className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 border border-[#FAF5ED]/20"
-                style={{ backgroundColor: client.secondary_color || '#fff' }}
-              ></div>
-              <span className="text-[#FAF5ED] font-mono text-sm">{client.secondary_color || 'N/A'}</span>
-            </div>
-          </div>
-          <div className="md:col-span-2">
-            <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Mood</p>
-            <p className="text-[#FAF5ED] font-medium">{client.brand_mood || 'Non défini'}</p>
-          </div>
+          )}
         </div>
+
+        {isEditing ? (
+          // MODE ÉDITION
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in">
+            <div>
+              <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Primaire</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={editForm.primary_color}
+                  onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })}
+                  className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={editForm.primary_color}
+                  onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })}
+                  className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Secondaire</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={editForm.secondary_color}
+                  onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })}
+                  className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={editForm.secondary_color}
+                  onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })}
+                  className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none"
+                />
+              </div>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Mood / Ambiance</label>
+              <input
+                type="text"
+                value={editForm.brand_mood}
+                onChange={(e) => setEditForm({ ...editForm, brand_mood: e.target.value })}
+                className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-3 py-2 text-sm focus:border-[#24B745] outline-none"
+                placeholder="Ex: Minimaliste, Tech, Luxe..."
+              />
+            </div>
+          </div>
+        ) : (
+          // MODE LECTURE
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Primaire</p>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 border border-[#FAF5ED]/20"
+                  style={{ backgroundColor: client.primary_color || '#000' }}
+                ></div>
+                <span className="text-[#FAF5ED] font-mono text-sm">{client.primary_color || 'N/A'}</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Secondaire</p>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 border border-[#FAF5ED]/20"
+                  style={{ backgroundColor: client.secondary_color || '#fff' }}
+                ></div>
+                <span className="text-[#FAF5ED] font-mono text-sm">{client.secondary_color || 'N/A'}</span>
+              </div>
+            </div>
+            <div className="md:col-span-2">
+              <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Mood</p>
+              <p className="text-[#FAF5ED] font-medium">{client.brand_mood || 'Non défini'}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <h2 className="text-2xl font-bold text-[#232323] mb-6 uppercase tracking-tight flex items-center gap-3">
