@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, Client, Analysis } from '../lib/supabase';
-import { ArrowLeft, Plus, Calendar, ChevronRight, Trash2, Search, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, ChevronRight, Trash2, Search, Edit2, Save, X, Video, Image as ImageIcon } from 'lucide-react';
 
 interface ClientDetailProps {
   client: Client;
@@ -9,10 +9,14 @@ interface ClientDetailProps {
   onNewAnalysis: () => void;
 }
 
+// On étend l'interface locale pour inclure les concepts récupérés
+interface AnalysisWithCounts extends Analysis {
+  concepts?: { media_type: 'video' | 'static' }[];
+}
+
 export default function ClientDetail({ client: initialClient, onBack, onSelectAnalysis, onNewAnalysis }: ClientDetailProps) {
-  // On utilise un state local pour le client afin de pouvoir mettre à jour l'UI instantanément
   const [client, setClient] = useState<Client>(initialClient);
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const [analyses, setAnalyses] = useState<AnalysisWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
 
   // États pour l'édition de l'identité
@@ -25,7 +29,6 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
 
   useEffect(() => {
     loadAnalyses();
-    // Reset des données si le client change via les props
     setClient(initialClient);
     setEditForm({
       primary_color: initialClient.primary_color || '',
@@ -36,9 +39,15 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
 
   async function loadAnalyses() {
     try {
+      // On récupère les analyses ET les concepts liés (juste le type pour compter)
       const { data, error } = await supabase
         .from('analyses')
-        .select('*')
+        .select(`
+          *,
+          concepts (
+            media_type
+          )
+        `)
         .eq('client_id', client.id)
         .order('created_at', { ascending: false });
 
@@ -77,8 +86,6 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
         .eq('id', client.id);
 
       if (error) throw error;
-
-      // Mise à jour locale
       setClient({ ...client, ...editForm });
       setIsEditing(false);
     } catch (error) {
@@ -120,7 +127,7 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
         </button>
       </div>
 
-      {/* SECTION IDENTITÉ VISUELLE (MODIFIABLE) */}
+      {/* SECTION IDENTITÉ VISUELLE */}
       <div className="bg-[#232323] p-6 mb-10 border-l-4 border-[#24B745] shadow-md group relative">
         <div className="flex items-center justify-between mb-6 border-b border-[#FAF5ED]/10 pb-2">
           <h3 className="text-[#FAF5ED] font-bold uppercase tracking-widest text-xs">
@@ -155,73 +162,39 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
         </div>
 
         {isEditing ? (
-          // MODE ÉDITION
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in">
             <div>
               <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Primaire</label>
               <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={editForm.primary_color}
-                  onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })}
-                  className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={editForm.primary_color}
-                  onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })}
-                  className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none"
-                />
+                <input type="color" value={editForm.primary_color} onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })} className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer" />
+                <input type="text" value={editForm.primary_color} onChange={(e) => setEditForm({ ...editForm, primary_color: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none" />
               </div>
             </div>
             <div>
               <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Secondaire</label>
               <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={editForm.secondary_color}
-                  onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })}
-                  className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={editForm.secondary_color}
-                  onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })}
-                  className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none"
-                />
+                <input type="color" value={editForm.secondary_color} onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })} className="h-10 w-12 p-0 border-0 bg-transparent cursor-pointer" />
+                <input type="text" value={editForm.secondary_color} onChange={(e) => setEditForm({ ...editForm, secondary_color: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-2 py-1 text-xs font-mono focus:border-[#24B745] outline-none" />
               </div>
             </div>
             <div className="md:col-span-2">
               <label className="block text-[#FAF5ED]/50 text-[10px] font-bold uppercase mb-2">Mood / Ambiance</label>
-              <input
-                type="text"
-                value={editForm.brand_mood}
-                onChange={(e) => setEditForm({ ...editForm, brand_mood: e.target.value })}
-                className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-3 py-2 text-sm focus:border-[#24B745] outline-none"
-                placeholder="Ex: Minimaliste, Tech, Luxe..."
-              />
+              <input type="text" value={editForm.brand_mood} onChange={(e) => setEditForm({ ...editForm, brand_mood: e.target.value })} className="w-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] px-3 py-2 text-sm focus:border-[#24B745] outline-none" placeholder="Ex: Minimaliste, Tech, Luxe..." />
             </div>
           </div>
         ) : (
-          // MODE LECTURE
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
               <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Primaire</p>
               <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 border border-[#FAF5ED]/20"
-                  style={{ backgroundColor: client.primary_color || '#000' }}
-                ></div>
+                <div className="w-8 h-8 border border-[#FAF5ED]/20" style={{ backgroundColor: client.primary_color || '#000' }}></div>
                 <span className="text-[#FAF5ED] font-mono text-sm">{client.primary_color || 'N/A'}</span>
               </div>
             </div>
             <div>
               <p className="text-[#FAF5ED]/50 text-xs mb-1 font-mono">Secondaire</p>
               <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 border border-[#FAF5ED]/20"
-                  style={{ backgroundColor: client.secondary_color || '#fff' }}
-                ></div>
+                <div className="w-8 h-8 border border-[#FAF5ED]/20" style={{ backgroundColor: client.secondary_color || '#fff' }}></div>
                 <span className="text-[#FAF5ED] font-mono text-sm">{client.secondary_color || 'N/A'}</span>
               </div>
             </div>
@@ -252,51 +225,74 @@ export default function ClientDetail({ client: initialClient, onBack, onSelectAn
         </div>
       ) : (
         <div className="space-y-4">
-          {analyses.map((analysis) => (
-            <div
-              key={analysis.id}
-              onClick={() => onSelectAnalysis(analysis)}
-              // CARTE ANALYSE : Fond Sombre, Texte Crème
-              className="group flex items-center justify-between p-6 bg-[#232323] border-l-4 border-transparent hover:border-[#24B745] hover:translate-x-1 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg"
-            >
-              <div className="flex-1 min-w-0 pr-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-bold text-[#FAF5ED] group-hover:text-[#24B745] truncate transition-colors">
-                    {analysis.brand_name}
-                  </h3>
-                  <span className="px-2 py-0.5 bg-[#24B745]/20 text-[#24B745] text-[10px] font-bold uppercase tracking-wide border border-[#24B745]/30">
-                    {analysis.ad_platform}
-                  </span>
+          {analyses.map((analysis) => {
+            // Calcul des compteurs
+            const videoCount = analysis.concepts?.filter(c => c.media_type === 'video').length || 0;
+            const staticCount = analysis.concepts?.filter(c => c.media_type === 'static').length || 0;
+
+            return (
+              <div
+                key={analysis.id}
+                onClick={() => onSelectAnalysis(analysis)}
+                className="group flex items-center justify-between p-6 bg-[#232323] border-l-4 border-transparent hover:border-[#24B745] hover:translate-x-1 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg"
+              >
+                <div className="flex-1 min-w-0 pr-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-bold text-[#FAF5ED] group-hover:text-[#24B745] truncate transition-colors">
+                      {analysis.brand_name}
+                    </h3>
+                    <span className="px-2 py-0.5 bg-[#24B745]/20 text-[#24B745] text-[10px] font-bold uppercase tracking-wide border border-[#24B745]/30">
+                      {analysis.ad_platform}
+                    </span>
+                  </div>
+                  <p className="text-[#FAF5ED]/60 text-sm line-clamp-1 font-light">
+                    {analysis.offer_details}
+                  </p>
+                  
+                  {/* NOUVELLE LIGNE DE STATS */}
+                  <div className="flex items-center gap-6 mt-4">
+                    <div className="flex items-center gap-2 text-[#FAF5ED]/40 text-xs font-mono">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(analysis.created_at).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                      })}
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      {videoCount > 0 && (
+                        <div className="flex items-center gap-1.5 text-[#24B745] text-xs font-bold uppercase tracking-wide">
+                          <Video className="w-3 h-3" />
+                          <span>{videoCount} Vidéos</span>
+                        </div>
+                      )}
+                      {staticCount > 0 && (
+                        <div className="flex items-center gap-1.5 text-[#FFBEFA] text-xs font-bold uppercase tracking-wide">
+                          <ImageIcon className="w-3 h-3" />
+                          <span>{staticCount} Statiques</span>
+                        </div>
+                      )}
+                      {videoCount === 0 && staticCount === 0 && (
+                        <span className="text-[#FAF5ED]/20 text-xs font-bold uppercase tracking-wide">Aucun concept</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[#FAF5ED]/60 text-sm line-clamp-1 font-light">
-                  {analysis.offer_details}
-                </p>
-                <div className="flex items-center gap-2 mt-3 text-[#FAF5ED]/40 text-xs font-mono">
-                  <Calendar className="w-3 h-3" />
-                  {new Date(analysis.created_at).toLocaleDateString('fr-FR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={(e) => deleteAnalysis(analysis.id, e)}
+                    className="p-2 text-[#FAF5ED]/20 hover:text-red-500 hover:bg-[#FAF5ED]/5 transition-colors"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                  <div className="w-10 h-10 bg-[#2A2A2A] flex items-center justify-center group-hover:bg-[#24B745] transition-colors">
+                    <ChevronRight className="w-5 h-5 text-[#FAF5ED] group-hover:text-[#232323]" />
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={(e) => deleteAnalysis(analysis.id, e)}
-                  className="p-2 text-[#FAF5ED]/20 hover:text-red-500 hover:bg-[#FAF5ED]/5 transition-colors"
-                  title="Supprimer"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-                <div className="w-10 h-10 bg-[#2A2A2A] flex items-center justify-center group-hover:bg-[#24B745] transition-colors">
-                  <ChevronRight className="w-5 h-5 text-[#FAF5ED] group-hover:text-[#232323]" />
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
