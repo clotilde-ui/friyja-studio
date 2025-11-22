@@ -276,13 +276,11 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   async function handleGenerateImage(concept: Concept) {
     const provider = selectedProvider[concept.id] || 'openai';
 
-    // VÉRIFICATION STRICTE : Le prompt doit exister
     if (!concept.generated_prompt) {
       alert('Veuillez d\'abord générer un prompt avant de lancer la création de l\'image.');
       return;
     }
 
-    // Vérifications des clés API selon le provider choisi
     if (provider === 'openai' && !apiKey) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
@@ -301,9 +299,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     setGeneratingImageId(concept.id);
     
     try {
-      // UTILISATION STRICTE : On utilise uniquement le prompt affiché
       const promptToUse = concept.generated_prompt;
-
       let imageUrl: string;
 
       if (provider === 'ideogram') {
@@ -341,7 +337,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   async function handleDownloadImage(concept: Concept) {
     if (!concept.image_url) return;
 
-    // Si c'est une image Data URL (Base64 venant de Google), on la télécharge directement
     if (concept.image_url.startsWith('data:')) {
         const link = document.createElement('a');
         link.href = concept.image_url;
@@ -352,7 +347,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         return;
     }
 
-    // Sinon (URL distante OpenAI/Ideogram), on passe par le proxy Supabase pour éviter les problèmes CORS
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const downloadFunctionUrl = `${supabaseUrl}/functions/v1/download-image`;
@@ -619,7 +613,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                     Supprimer tout
                   </button>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto relative">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-200">
@@ -639,8 +633,14 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                         {hasVideoConcepts && (
                           <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[250px]">Script</th>
                         )}
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Image</th>
-                        <th className="w-16"></th>
+                        {/* Colonnes Sticky à droite */}
+                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[280px] sticky right-[290px] bg-white z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
+                          Prompt Créa
+                        </th>
+                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[240px] sticky right-[50px] bg-white z-20 border-l border-slate-200">
+                          Image
+                        </th>
+                        <th className="w-[50px] sticky right-0 bg-white z-20 border-l border-slate-200"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -649,7 +649,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                         const displayConcept = isEditing ? editedConcept : concept;
 
                         return (
-                        <tr key={concept.id} className="border-b border-slate-100 hover:bg-slate-50">
+                        <tr key={concept.id} className="border-b border-slate-100 hover:bg-slate-50 group">
                           <td className="py-3 px-4 text-sm text-slate-600 font-medium">
                             {isEditing ? (
                               <textarea
@@ -705,6 +705,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.marketing_objective}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, marketing_objective: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                                rows={2}
                               />
                             ) : (
                               <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full bg-${color}-100 text-${color}-700`}>
@@ -812,33 +813,15 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                               )}
                             </td>
                           )}
-                          <td className="py-3 px-4">
+                          
+                          {/* COLONNE PROMPT CRÉA (Sticky) */}
+                          <td className="py-3 px-4 sticky right-[290px] bg-white group-hover:bg-slate-50 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top">
                             {concept.media_type === 'static' ? (
-                              <div className="space-y-2">
-                                {concept.generated_prompt && (
-                                  <div className="mb-2 p-2 bg-slate-50 rounded border border-slate-200">
-                                    <div className="flex items-start justify-between gap-2 mb-1">
-                                      <p className="text-xs font-semibold text-slate-700">Prompt généré:</p>
-                                      <button
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(concept.generated_prompt!);
-                                          alert('Prompt copié !');
-                                        }}
-                                        className="p-1 text-slate-600 hover:text-slate-800"
-                                        title="Copier le prompt"
-                                      >
-                                        <Copy className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                    <p className="text-xs text-slate-600 whitespace-pre-wrap max-h-32 overflow-y-auto">
-                                      {concept.generated_prompt}
-                                    </p>
-                                  </div>
-                                )}
+                              <div className="flex flex-col gap-2">
                                 <button
                                   onClick={() => handleGeneratePrompt(concept)}
                                   disabled={generatingPromptId === concept.id}
-                                  className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50 mb-2"
+                                  className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50"
                                 >
                                   {generatingPromptId === concept.id ? (
                                     <>
@@ -852,12 +835,43 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                     </>
                                   )}
                                 </button>
+                                
+                                {concept.generated_prompt && (
+                                  <div className="p-2 bg-slate-50 rounded border border-slate-200 group-hover:bg-white">
+                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                      <p className="text-xs font-semibold text-slate-700">Prompt:</p>
+                                      <button
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(concept.generated_prompt!);
+                                          alert('Prompt copié !');
+                                        }}
+                                        className="p-1 text-slate-600 hover:text-slate-800"
+                                        title="Copier le prompt"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                    <p className="text-xs text-slate-600 whitespace-pre-wrap max-h-32 overflow-y-auto custom-scrollbar">
+                                      {concept.generated_prompt.substring(0, 150)}...
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-slate-400">N/A (Vidéo)</span>
+                            )}
+                          </td>
+
+                          {/* COLONNE IMAGE (Sticky) */}
+                          <td className="py-3 px-4 sticky right-[50px] bg-white group-hover:bg-slate-50 border-l border-slate-200 z-10 align-top">
+                            {concept.media_type === 'static' ? (
+                              <div className="flex flex-col gap-2">
                                 {concept.image_url && (
-                                  <div className="relative group">
+                                  <div className="relative group/img">
                                     <img
                                       src={concept.image_url}
                                       alt={concept.concept}
-                                      className="w-32 h-32 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                      className="w-full h-32 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
                                       onClick={() => setModalImageUrl(concept.image_url!)}
                                     />
                                     <button
@@ -865,21 +879,22 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                         e.stopPropagation();
                                         handleDownloadImage(concept);
                                       }}
-                                      className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                      className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded shadow-sm opacity-0 group-hover/img:opacity-100 transition-opacity"
                                       title="Télécharger l'image"
                                     >
                                       <DownloadIcon className="w-4 h-4 text-slate-700" />
                                     </button>
                                   </div>
                                 )}
-                                <div className="flex gap-2">
+                                
+                                <div className="flex flex-col gap-2">
                                   <select
                                     value={selectedProvider[concept.id] || 'openai'}
                                     onChange={(e) => setSelectedProvider({
                                       ...selectedProvider,
                                       [concept.id]: e.target.value as ImageProvider
                                     })}
-                                    className="text-xs border border-slate-300 rounded px-2 py-1"
+                                    className="text-xs border border-slate-300 rounded px-2 py-1 w-full"
                                     disabled={generatingImageId === concept.id}
                                   >
                                     <option value="openai">OpenAI</option>
@@ -889,18 +904,15 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                   <button
                                     onClick={() => handleGenerateImage(concept)}
                                     disabled={generatingImageId === concept.id || !concept.generated_prompt}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-[#26B743] hover:bg-[#1f9336] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-[#26B743] hover:bg-[#1f9336] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     title={!concept.generated_prompt ? "Générez d'abord un prompt" : "Générer l'image"}
                                   >
                                     {generatingImageId === concept.id ? (
-                                      <>
-                                        <Loader className="w-3 h-3 animate-spin" />
-                                        Génération...
-                                      </>
+                                      <Loader className="w-3 h-3 animate-spin" />
                                     ) : (
                                       <>
                                         <ImageIcon className="w-3 h-3" />
-                                        Générer une image
+                                        Générer
                                       </>
                                     )}
                                   </button>
@@ -910,20 +922,22 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                               <span className="text-sm text-slate-400">N/A</span>
                             )}
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
+
+                          {/* COLONNE ACTIONS (Sticky) */}
+                          <td className="py-3 px-2 sticky right-0 bg-white group-hover:bg-slate-50 border-l border-slate-200 z-10 align-top">
+                            <div className="flex flex-col items-center gap-2 mt-1">
                               {isEditing ? (
                                 <>
                                   <button
                                     onClick={saveEdit}
-                                    className="p-1 text-green-600 hover:text-green-700 transition-colors"
+                                    className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
                                     title="Enregistrer"
                                   >
                                     <Check className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={cancelEdit}
-                                    className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
                                     title="Annuler"
                                   >
                                     <X className="w-4 h-4" />
@@ -933,17 +947,17 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 <>
                                   <button
                                     onClick={() => startEditing(concept)}
-                                    className="p-1 text-slate-400 hover:text-[#26B743] transition-colors"
+                                    className="p-1.5 text-slate-400 hover:text-[#26B743] hover:bg-slate-100 rounded transition-colors"
                                     title="Modifier"
                                   >
                                     <Edit2 className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={(e) => handleDeleteConcept(concept.id, e)}
-                                    className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                     title="Supprimer"
                                   >
-                                    <X className="w-4 h-4" />
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </>
                               )}
