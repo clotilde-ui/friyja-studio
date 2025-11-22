@@ -634,8 +634,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                           <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[250px]">Script</th>
                         )}
                         
-                        {/* COLONNE FUSIONNÉE : STUDIO CRÉA (Sticky) */}
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px] sticky right-[50px] bg-white z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
+                        {/* COLONNE FUSIONNÉE : STUDIO CRÉA (Sticky) AVEC NOUVEAU BACKGROUND */}
+                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px] sticky right-[50px] bg-slate-50 z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
                           Studio Créa
                         </th>
                         
@@ -706,6 +706,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.marketing_objective}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, marketing_objective: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                                rows={2}
                               />
                             ) : (
                               <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full bg-${color}-100 text-${color}-700`}>
@@ -782,6 +783,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                 value={displayConcept.cta}
                                 onChange={(e) => setEditedConcept({ ...editedConcept, cta: e.target.value })}
                                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                                rows={2}
                               />
                             ) : (
                               concept.cta
@@ -814,8 +816,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                             </td>
                           )}
                           
-                          {/* COLONNE STUDIO CRÉA FUSIONNÉE (Sticky) */}
-                          <td className="py-3 px-4 sticky right-[50px] bg-white group-hover:bg-slate-50 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top">
+                          {/* COLONNE STUDIO CRÉA FUSIONNÉE (Sticky) AVEC NOUVEAU BACKGROUND */}
+                          <td className="py-3 px-4 sticky right-[50px] bg-slate-50 group-hover:bg-slate-100 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top transition-colors">
                             {concept.media_type === 'static' ? (
                               <div className="flex flex-col gap-4">
                                 {/* Bloc Prompt */}
@@ -839,7 +841,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                   </button>
                                   
                                   {concept.generated_prompt && (
-                                    <div className="p-2 bg-slate-50 rounded border border-slate-200 group-hover:bg-white">
+                                    <div className="p-2 bg-white rounded border border-slate-200">
                                       <div className="flex items-start justify-between gap-2 mb-1">
                                         <p className="text-xs font-semibold text-slate-700">Prompt:</p>
                                         <button
@@ -891,7 +893,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                           ...selectedProvider,
                                           [concept.id]: e.target.value as ImageProvider
                                         })}
-                                        className="text-xs border border-slate-300 rounded px-2 py-1 w-full"
+                                        className="text-xs border border-slate-300 rounded px-2 py-1 w-full bg-white"
                                         disabled={generatingImageId === concept.id}
                                       >
                                         <option value="openai">OpenAI</option>
