@@ -3,31 +3,46 @@
 @tailwind utilities;
 
 @layer base {
+  /* RÈGLE BRUTALISTE : Angles droits partout ! */
+  * {
+    border-radius: 0 !important;
+  }
+
   body {
     font-family: 'Inter', sans-serif;
-    /* Fond Crème #FAF5ED et Texte Noir #232323 */
+    /* Fond Beige et Texte Anthracite par défaut */
     @apply bg-[#FAF5ED] text-[#232323];
   }
   
-  /* Scrollbar sombre sur fond crème */
+  /* Scrollbar personnalisée aux couleurs de l'app */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
   ::-webkit-scrollbar-track {
     @apply bg-[#FAF5ED];
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-[#232323] rounded-full;
+    @apply bg-[#232323] border-2 border-[#FAF5ED];
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-[#333333];
+    @apply bg-[#24B745];
   }
 }
 
-/* Inputs personnalisés pour le thème sombre des cartes */
-.input-dark {
-  @apply bg-[#2A2A2A] border border-[#3A3A3A] text-[#FAF5ED] focus:border-[#24B745] focus:ring-1 focus:ring-[#24B745] placeholder-gray-500;
+/* Inputs : Fond Anthracite, Texte Beige */
+input, textarea, select {
+  @apply bg-[#232323] !important;
+  @apply border border-[#232323]/20 !important;
+  @apply text-[#FAF5ED] !important;
+  @apply placeholder-[#FAF5ED]/50 !important;
+}
+
+/* Focus states pour les inputs */
+input:focus, textarea:focus, select:focus {
+  @apply border-[#24B745] !important;
+  @apply ring-1 ring-[#24B745] !important;
+  outline: none !important;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -37,5 +52,5 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-gray-500 rounded-full;
+  @apply bg-[#232323];
 }
