@@ -594,126 +594,66 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
   return (
     <div className="max-w-[95%] mx-auto">
+      {/* HEADER ET ONGLETS */}
       <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-slate-600 hover:text-slate-800"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Retour
+        <button onClick={onBack} className="flex items-center gap-2 text-[#232323]/60 hover:text-[#24B745] font-bold uppercase tracking-wider text-xs transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Retour
         </button>
         
-        <div className="flex bg-slate-100 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab('video')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${
-              activeTab === 'video'
-                ? 'bg-white text-[#26B743] shadow-sm'
-                : 'text-slate-600 hover:text-slate-800'
-            }`}
-          >
-            <Video className="w-4 h-4" />
-            Concepts Vidéos
+        <div className="flex bg-[#232323] p-1 gap-1 rounded-none">
+          <button onClick={() => setActiveTab('video')} className={`flex items-center gap-2 px-6 py-2 font-bold uppercase text-xs tracking-wide transition-all rounded-none ${activeTab === 'video' ? 'bg-[#24B745] text-[#FAF5ED]' : 'text-[#FAF5ED]/50 hover:text-[#FAF5ED]'}`}>
+            <Video className="w-4 h-4" /> Concepts Vidéos
           </button>
-          <button
-            onClick={() => setActiveTab('static')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium transition-all ${
-              activeTab === 'static'
-                ? 'bg-white text-[#FFBEFA] !text-purple-600 shadow-sm'
-                : 'text-slate-600 hover:text-slate-800'
-            }`}
-          >
-            <ImageIcon className="w-4 h-4" />
-            Concepts Statiques
+          <button onClick={() => setActiveTab('static')} className={`flex items-center gap-2 px-6 py-2 font-bold uppercase text-xs tracking-wide transition-all rounded-none ${activeTab === 'static' ? 'bg-[#FFBEFA] text-[#232323]' : 'text-[#FAF5ED]/50 hover:text-[#FAF5ED]'}`}>
+            <ImageIcon className="w-4 h-4" /> Concepts Statiques
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+      {/* CARTE STRATÉGIE (FOND NOIR) */}
+      <div className="bg-[#232323] p-6 mb-6 border-l-4 border-[#24B745] shadow-md rounded-none">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">{analysisParams.brand_name}</h2>
-            <p className="text-slate-600 text-sm">{analysisParams.website_url}</p>
+            {/* NOM ANALYSE : AJOUT DU CHAMP D'EDITION ICI SI BESOIN, SINON AFFICHAGE SIMPLE */}
+            <h2 className="text-2xl font-black text-[#FAF5ED] uppercase tracking-tighter">{analysisParams.brand_name}</h2>
+            <p className="text-[#FAF5ED]/60 text-sm font-mono">{analysisParams.website_url}</p>
           </div>
           <div className="flex gap-2">
             {activeConcepts.length > 0 && (
               <>
-                <button
-                  onClick={exportToCSV}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <FileDown className="w-5 h-5" />
-                  CSV
+                <button onClick={exportToCSV} className="flex items-center gap-2 px-4 py-3 bg-[#1f9e3b]/20 hover:bg-[#1f9e3b]/40 text-[#24B745] font-bold uppercase text-xs border border-[#24B745] transition-colors rounded-none">
+                  <FileDown className="w-4 h-4" /> CSV
                 </button>
-                <button
-                  onClick={exportToText}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
-                >
-                  <Download className="w-5 h-5" />
-                  TXT
+                <button onClick={exportToText} className="flex items-center gap-2 px-4 py-3 bg-[#FAF5ED]/10 hover:bg-[#FAF5ED]/20 text-[#FAF5ED] font-bold uppercase text-xs border border-[#FAF5ED]/20 transition-colors rounded-none">
+                  <Download className="w-4 h-4" /> TXT
                 </button>
               </>
             )}
             
             {activeTab === 'video' ? (
-              <button
-                onClick={handleGenerateVideo}
-                disabled={generatingVideo || !apiKey}
-                className="flex items-center gap-2 px-6 py-2 bg-[#26B743] text-white rounded-lg hover:bg-[#1f9336] disabled:bg-slate-400 transition-colors"
-              >
-                {generatingVideo ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Génération...
-                  </>
-                ) : (
-                  <>
-                    <Video className="w-5 h-5" />
-                    Générer Vidéos
-                  </>
-                )}
+              <button onClick={handleGenerateVideo} disabled={generatingVideo || !apiKey} className="flex items-center gap-2 px-6 py-3 bg-[#24B745] text-[#FAF5ED] hover:bg-[#1f9e3b] disabled:opacity-50 transition-colors font-bold uppercase text-xs tracking-widest rounded-none">
+                {generatingVideo ? <Loader className="w-4 h-4 animate-spin" /> : <><Video className="w-4 h-4" /> Générer Vidéos</>}
               </button>
             ) : (
-              <button
-                onClick={handleGenerateStatic}
-                disabled={generatingStatic || !apiKey}
-                className="flex items-center gap-2 px-6 py-2 bg-[#FFBEFA] text-[#232323] rounded-lg hover:bg-[#ff9de6] disabled:bg-slate-400 transition-colors"
-              >
-                {generatingStatic ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Génération...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon className="w-5 h-5" />
-                    Générer Statiques
-                  </>
-                )}
+              <button onClick={handleGenerateStatic} disabled={generatingStatic || !apiKey} className="flex items-center gap-2 px-6 py-3 bg-[#FFBEFA] text-[#232323] hover:bg-[#e0a6dc] disabled:opacity-50 transition-colors font-bold uppercase text-xs tracking-widest rounded-none">
+                {generatingStatic ? <Loader className="w-4 h-4 animate-spin" /> : <><ImageIcon className="w-4 h-4" /> Générer Statiques</>}
               </button>
             )}
           </div>
         </div>
 
-        {/* PANNEAU ANALYSE DÉPLIABLE */}
-        <div className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden transition-all">
-          <button
-            onClick={() => setIsAnalysisOpen(!isAnalysisOpen)}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-100 transition-colors"
-          >
+        {/* PANNEAU DÉPLIABLE ANALYSE (Style Dark) */}
+        <div className="bg-[#2A2A2A] border border-[#3A3A3A] overflow-hidden rounded-none">
+          <button onClick={() => setIsAnalysisOpen(!isAnalysisOpen)} className="w-full flex items-center justify-between p-3 text-left hover:bg-[#333] transition-colors rounded-none">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              <span className="font-semibold text-slate-700">Analyse & Stratégie</span>
+              <Sparkles className="w-4 h-4 text-[#24B745]" />
+              <span className="font-bold text-[#FAF5ED] uppercase text-xs tracking-widest">Stratégie & Analyse (Déplier pour modifier)</span>
             </div>
-            {isAnalysisOpen ? (
-              <ChevronUp className="w-5 h-5 text-slate-500" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-slate-500" />
-            )}
+            {isAnalysisOpen ? <ChevronUp className="w-4 h-4 text-[#FAF5ED]" /> : <ChevronDown className="w-4 h-4 text-[#FAF5ED]" />}
           </button>
 
           {isAnalysisOpen && (
-            <div className="p-4 border-t border-slate-200 space-y-4 bg-white">
+            <div className="p-4 border-t border-[#3A3A3A] space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-[10px] font-bold text-[#24B745] uppercase tracking-wider mb-1">Nom de l'analyse</label>
@@ -721,467 +661,182 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                     type="text"
                     value={analysisParams.brand_name}
                     onChange={(e) => setAnalysisParams({ ...analysisParams, brand_name: e.target.value })}
-                    className="w-full bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] p-2 text-sm focus:border-[#24B745]"
+                    className="w-full bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] p-2 text-sm focus:border-[#24B745] rounded-none"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Offre / Produits / Services
-                  </label>
-                  <textarea
-                    value={analysisParams.offer_details}
-                    onChange={(e) => setAnalysisParams({ ...analysisParams, offer_details: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#26B743] focus:border-transparent"
-                    rows={3}
-                  />
+                  <label className="block text-[10px] font-bold text-[#24B745] uppercase tracking-wider mb-1">Offre</label>
+                  <textarea value={analysisParams.offer_details} onChange={(e) => setAnalysisParams({ ...analysisParams, offer_details: e.target.value })} className="w-full bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] p-2 text-sm focus:border-[#24B745] rounded-none" rows={2} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Cibles prioritaires
-                  </label>
-                  <textarea
-                    value={analysisParams.target_audience}
-                    onChange={(e) => setAnalysisParams({ ...analysisParams, target_audience: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#26B743] focus:border-transparent"
-                    rows={4}
-                  />
+                  <label className="block text-[10px] font-bold text-[#24B745] uppercase tracking-wider mb-1">Cible</label>
+                  <textarea value={analysisParams.target_audience} onChange={(e) => setAnalysisParams({ ...analysisParams, target_audience: e.target.value })} className="w-full bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] p-2 text-sm focus:border-[#24B745] rounded-none" rows={3} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Positionnement et ton de marque
-                  </label>
-                  <textarea
-                    value={analysisParams.brand_positioning}
-                    onChange={(e) => setAnalysisParams({ ...analysisParams, brand_positioning: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#26B743] focus:border-transparent"
-                    rows={4}
-                  />
+                  <label className="block text-[10px] font-bold text-[#24B745] uppercase tracking-wider mb-1">Positionnement</label>
+                  <textarea value={analysisParams.brand_positioning} onChange={(e) => setAnalysisParams({ ...analysisParams, brand_positioning: e.target.value })} className="w-full bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] p-2 text-sm focus:border-[#24B745] rounded-none" rows={3} />
                 </div>
               </div>
               <div className="flex justify-end">
-                <button
-                  onClick={handleSaveAnalysis}
-                  disabled={isSavingAnalysis}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#26B743] text-white rounded-lg hover:bg-[#1f9336] disabled:bg-slate-400 transition-colors"
-                >
-                  {isSavingAnalysis ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin" />
-                      Sauvegarde...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Sauvegarder l'analyse
-                    </>
-                  )}
+                <button onClick={handleSaveAnalysis} disabled={isSavingAnalysis} className="flex items-center gap-2 px-4 py-2 bg-[#232323] border border-[#24B745] text-[#24B745] hover:bg-[#24B745] hover:text-[#FAF5ED] transition-colors font-bold uppercase text-xs rounded-none">
+                  {isSavingAnalysis ? '...' : <><Save className="w-3 h-3" /> Sauvegarder</>}
                 </button>
               </div>
-            </div>
-          )}
-          
-          {/* Résumé quand fermé */}
-          {!isAnalysisOpen && (
-            <div className="px-4 pb-4 text-sm text-slate-500">
-              <span className="font-semibold">Cible :</span> {analysisParams.target_audience.substring(0, 150)}...
             </div>
           )}
         </div>
       </div>
 
+      {/* TABLEAU DES CONCEPTS (FOND NOIR) */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader className="w-8 h-8 animate-spin text-[#26B743]" />
-        </div>
+        <div className="flex justify-center h-64 items-center"><Loader className="w-8 h-8 animate-spin text-[#232323]" /></div>
       ) : activeConcepts.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            {activeTab === 'video' ? <Video className="w-8 h-8 text-slate-400" /> : <ImageIcon className="w-8 h-8 text-slate-400" />}
-          </div>
-          <p className="text-slate-500 mb-4">Aucun concept {activeTab === 'video' ? 'vidéo' : 'statique'} généré</p>
-          <p className="text-sm text-slate-400">
-            Cliquez sur le bouton "Générer" ci-dessus pour commencer
-          </p>
+        <div className="text-center py-12 border-2 border-dashed border-[#232323]/20 rounded-none">
+          <p className="text-[#232323] font-medium">Aucun concept généré pour le moment</p>
         </div>
       ) : (
         <div className="space-y-8">
           {[
-            { stage: 'TOFU', concepts: tofuConcepts, color: 'blue', label: 'Top of Funnel - Awareness' },
-            { stage: 'MOFU', concepts: mofuConcepts, color: 'purple', label: 'Middle of Funnel - Considération' },
-            { stage: 'BOFU', concepts: bofuConcepts, color: 'green', label: 'Bottom of Funnel - Conversion' },
-          ].map(({ stage, concepts: stageConcepts, color, label }) => (
+            { stage: 'TOFU', concepts: tofuConcepts, color: '#24B745', label: 'Top of Funnel' },
+            { stage: 'MOFU', concepts: mofuConcepts, color: '#A855F7', label: 'Middle of Funnel' },
+            { stage: 'BOFU', concepts: bofuConcepts, color: '#22C55E', label: 'Bottom of Funnel' },
+          ].map(({ stage, concepts: stageConcepts, label }) => (
             stageConcepts.length > 0 && (
-              <div key={stage} className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className={`text-xl font-bold text-${color}-600`}>
-                    {stage} - {label}
-                  </h3>
-                  <button
-                    onClick={() => handleDeleteAll(stage)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Supprimer tout
-                  </button>
+              <div key={stage} className="bg-[#232323] p-0 shadow-xl border border-[#232323] overflow-hidden rounded-none">
+                <div className="flex items-center justify-between p-4 bg-[#2A2A2A] border-b border-[#3A3A3A]">
+                  <h3 className="text-xl font-black text-[#FAF5ED] uppercase tracking-tight">{stage} <span className="text-[#FAF5ED]/40 text-sm font-normal normal-case ml-2">- {label}</span></h3>
+                  <button onClick={() => handleDeleteAll(stage)} className="text-red-400 hover:text-red-300 text-xs font-bold uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Tout supprimer</button>
                 </div>
-                <div className="overflow-x-auto relative">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Concept</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[120px]">Format</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px]">Hooks</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[120px]">Objectif</th>
-                        
-                        {activeTab === 'video' && (
-                          <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Scroll Stopper</th>
-                        )}
-                        
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Problème</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Solution</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Bénéfices</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Preuve</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[150px]">CTA</th>
+                
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-[#1A1A1A] text-[#FAF5ED]/60 text-[10px] uppercase tracking-wider">
+                      <tr>
+                        <th className="p-4 min-w-[200px]">Concept</th>
+                        <th className="p-4 min-w-[100px]">Format</th>
+                        <th className="p-4 min-w-[250px]">Hooks</th>
+                        <th className="p-4 min-w-[100px]">Objectif</th>
+                        <th className="p-4 min-w-[200px]">Problème / Solution</th>
+                        <th className="p-4 min-w-[150px]">CTA</th>
                         
                         {activeTab === 'video' ? (
                           <>
-                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Visuel suggéré</th>
-                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[250px]">Script</th>
+                            <th className="p-4 min-w-[200px]">Scroll Stopper</th>
+                            <th className="p-4 min-w-[300px]">Script</th>
                           </>
                         ) : (
                           <>
-                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[200px]">Visuel suggéré</th>
-                            {/* COLONNE FUSIONNÉE : STUDIO CRÉA (Sticky) AVEC NOUVEAU BACKGROUND */}
-                            <th className="text-left py-3 px-4 font-semibold text-slate-700 min-w-[300px] sticky right-[50px] bg-slate-50 z-20 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">
-                              Studio Créa
-                            </th>
+                             <th className="p-4 min-w-[200px]">Visuel Suggéré</th>
+                             {/* COLONNE STUDIO CRÉA (Sticky) */}
+                             <th className="p-4 min-w-[320px] sticky right-[50px] bg-[#1A1A1A] z-10 border-l-4 border-[#24B745]">Studio Créa</th>
                           </>
                         )}
                         
-                        {/* COLONNE ACTIONS (Sticky) */}
-                        <th className="w-[50px] sticky right-0 bg-white z-20 border-l border-slate-200"></th>
+                        <th className="w-[50px] sticky right-0 bg-[#1A1A1A] z-10 border-l border-[#3A3A3A]"></th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {stageConcepts.map((concept, i) => {
-                        const isEditing = editingConceptId === concept.id;
-                        const displayConcept = isEditing ? editedConcept : concept;
-
-                        return (
-                        <tr key={concept.id} className="border-b border-slate-100 hover:bg-slate-50 group">
-                          {/* ... (Colonnes de données identiques) ... */}
-                          <td className="py-3 px-4 text-sm text-slate-600 font-medium">
+                    <tbody className="text-[#FAF5ED] text-sm divide-y divide-[#3A3A3A]">
+                      {stageConcepts.map((c) => {
+                         const isEditing = editingConceptId === c.id;
+                         const displayConcept = isEditing ? editedConcept : c;
+                         
+                         return (
+                        <tr key={c.id} className="group hover:bg-[#2A2A2A] transition-colors">
+                          <td className="p-4 align-top font-bold">
+                            {isEditing ? <textarea value={displayConcept.concept} onChange={e=>setEditedConcept({...editedConcept, concept: e.target.value})} className="w-full bg-[#1A1A1A] text-[#FAF5ED] border border-[#3A3A3A] p-1 text-xs rounded-none"/> : c.concept}
+                          </td>
+                          <td className="p-4 align-top text-[#FAF5ED]/70 text-xs">
+                             {isEditing ? <input value={displayConcept.format} onChange={e=>setEditedConcept({...editedConcept, format: e.target.value})} className="w-full bg-[#1A1A1A] text-[#FAF5ED] border border-[#3A3A3A] p-1 text-xs rounded-none"/> : c.format}
+                          </td>
+                          <td className="p-4 align-top">
+                             {isEditing ? (
+                               <div className="space-y-1">{displayConcept.hooks?.map((h,i)=><input key={i} value={h} onChange={e=>updateHook(i, e.target.value)} className="w-full bg-[#1A1A1A] text-[#FAF5ED] border border-[#3A3A3A] p-1 text-xs rounded-none"/>)}</div>
+                             ) : (
+                               <ul className="list-decimal list-inside text-xs space-y-1 text-[#FAF5ED]/80">{c.hooks.map((h, i) => <li key={i}>{h}</li>)}</ul>
+                             )}
+                          </td>
+                          <td className="p-4 align-top">
+                             {isEditing ? <input value={displayConcept.marketing_objective} onChange={e=>setEditedConcept({...editedConcept, marketing_objective: e.target.value})} className="w-full bg-[#1A1A1A] text-[#FAF5ED] border border-[#3A3A3A] p-1 text-xs rounded-none"/> : <span className="bg-[#FAF5ED]/10 px-2 py-1 text-[10px] font-bold uppercase">{c.marketing_objective}</span>}
+                          </td>
+                          <td className="p-4 align-top text-xs space-y-2">
                             {isEditing ? (
-                              <textarea
-                                value={displayConcept.concept}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, concept: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
+                              <>
+                                <textarea value={displayConcept.problem} onChange={e=>setEditedConcept({...editedConcept, problem: e.target.value})} className="w-full bg-[#1A1A1A] text-[#FAF5ED] border border-[#3A3A3A] p-1 text-xs rounded-none mb-1"/>
+                                <textarea value={displayConcept.solution} onChange={e=>setEditedConcept({...editedConcept, solution: e.target.value})} className="w-full bg-[#1A1A1A] text-[#FAF5ED] border border-[#3A3A3A] p-1 text-xs rounded-none"/>
+                              </>
                             ) : (
-                              concept.concept
+                              <>
+                                <div><span className="text-[#24B745] font-bold">P:</span> {c.problem}</div>
+                                <div><span className="text-[#24B745] font-bold">S:</span> {c.solution}</div>
+                              </>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={displayConcept.format}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, format: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                              />
-                            ) : (
-                              concept.format
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {isEditing ? (
-                              <div className="space-y-1">
-                                {displayConcept.hooks?.map((hook, j) => (
-                                  <input
-                                    key={j}
-                                    type="text"
-                                    value={hook}
-                                    onChange={(e) => updateHook(j, e.target.value)}
-                                    className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                  />
-                                ))}
-                              </div>
-                            ) : (
-                              <ul className="text-sm text-slate-600 space-y-1">
-                                {concept.hooks.map((hook, j) => (
-                                  <li key={j} className="flex">
-                                    <span className="font-semibold mr-2">{j + 1}.</span>
-                                    <span>{hook}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={displayConcept.marketing_objective}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, marketing_objective: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
-                            ) : (
-                              <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full bg-${color}-100 text-${color}-700`}>
-                                {concept.marketing_objective}
-                              </span>
-                            )}
-                          </td>
-                          {activeTab === 'video' && (
-                            <td className="py-3 px-4 text-sm text-slate-600">
-                              {isEditing ? (
-                                <textarea
-                                  value={displayConcept.scroll_stopper}
-                                  onChange={(e) => setEditedConcept({ ...editedConcept, scroll_stopper: e.target.value })}
-                                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                  rows={2}
-                                />
-                              ) : (
-                                concept.scroll_stopper
-                              )}
-                            </td>
-                          )}
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {isEditing ? (
-                              <textarea
-                                value={displayConcept.problem}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, problem: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
-                            ) : (
-                              concept.problem
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {isEditing ? (
-                              <textarea
-                                value={displayConcept.solution}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, solution: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
-                            ) : (
-                              concept.solution
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {isEditing ? (
-                              <textarea
-                                value={displayConcept.benefits}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, benefits: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
-                            ) : (
-                              concept.benefits
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {isEditing ? (
-                              <textarea
-                                value={displayConcept.proof}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, proof: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
-                            ) : (
-                              concept.proof
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={displayConcept.cta}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, cta: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
-                            ) : (
-                              concept.cta
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {isEditing ? (
-                              <textarea
-                                value={displayConcept.suggested_visual}
-                                onChange={(e) => setEditedConcept({ ...editedConcept, suggested_visual: e.target.value })}
-                                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                rows={2}
-                              />
-                            ) : (
-                              concept.suggested_visual
-                            )}
+                          <td className="p-4 align-top text-xs font-bold text-[#24B745]">
+                            {isEditing ? <input value={displayConcept.cta} onChange={e=>setEditedConcept({...editedConcept, cta: e.target.value})} className="w-full bg-[#1A1A1A] text-[#FAF5ED] border border-[#3A3A3A] p-1 text-xs rounded-none"/> : c.cta}
                           </td>
                           
                           {activeTab === 'video' ? (
-                            <td className="py-3 px-4 text-sm text-slate-600">
-                              {isEditing ? (
-                                <textarea
-                                  value={displayConcept.script_outline}
-                                  onChange={(e) => setEditedConcept({ ...editedConcept, script_outline: e.target.value })}
-                                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                  rows={2}
-                                />
-                              ) : (
-                                concept.script_outline
-                              )}
-                            </td>
+                            <>
+                              <td className="p-4 align-top text-xs">{c.scroll_stopper}</td>
+                              <td className="p-4 align-top text-xs font-mono bg-[#1A1A1A]/50 p-2">{c.script_outline}</td>
+                            </>
                           ) : (
-                            <td className="py-3 px-4 sticky right-[50px] bg-slate-50 group-hover:bg-slate-100 border-l border-slate-200 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-10 align-top transition-colors">
-                              <div className="flex flex-col gap-4">
-                                {/* Bloc Prompt */}
-                                <div className="flex flex-col gap-2">
-                                  <button
-                                    onClick={() => handleGeneratePrompt(concept)}
-                                    disabled={generatingPromptId === concept.id}
-                                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50"
-                                  >
-                                    {generatingPromptId === concept.id ? (
-                                      <>
-                                        <Loader className="w-3 h-3 animate-spin" />
-                                        Génération...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Sparkles className="w-3 h-3" />
-                                        {concept.generated_prompt ? 'Régénérer prompt' : 'Générer un prompt'}
-                                      </>
-                                    )}
+                            <>
+                              <td className="p-4 align-top text-xs">{c.suggested_visual}</td>
+                              
+                              {/* COLONNE STUDIO STICKY (FOND NOIR, BORDURE VERTE) */}
+                              <td className="p-4 align-top sticky right-[50px] bg-[#232323] group-hover:bg-[#2A2A2A] border-l-4 border-[#24B745] z-10 shadow-[-10px_0_20px_-5px_rgba(0,0,0,0.5)]">
+                                <div className="space-y-3">
+                                  <button onClick={() => handleGeneratePrompt(c)} disabled={generatingPromptId===c.id} className="w-full py-2 bg-[#24B745]/10 hover:bg-[#24B745] text-[#24B745] hover:text-[#FAF5ED] border border-[#24B745] transition-colors text-[10px] font-bold uppercase tracking-widest rounded-none">
+                                    {generatingPromptId===c.id ? '...' : (c.generated_prompt ? 'Régénérer Prompt' : 'Générer Prompt')}
                                   </button>
                                   
-                                  {concept.generated_prompt && (
-                                    <div className="p-2 bg-white rounded border border-slate-200">
-                                      <div className="flex items-start justify-between gap-2 mb-1">
-                                        <p className="text-xs font-semibold text-slate-700">Prompt:</p>
-                                        <button
-                                          onClick={() => {
-                                            navigator.clipboard.writeText(concept.generated_prompt!);
-                                            alert('Prompt copié !');
-                                          }}
-                                          className="p-1 text-slate-600 hover:text-slate-800"
-                                          title="Copier le prompt"
-                                        >
-                                          <Copy className="w-3 h-3" />
-                                        </button>
-                                      </div>
-                                      <p className="text-xs text-slate-600 whitespace-pre-wrap max-h-20 overflow-y-auto custom-scrollbar">
-                                        {concept.generated_prompt}
-                                      </p>
+                                  {c.generated_prompt && (
+                                    <div className="bg-[#1A1A1A] p-3 border border-[#3A3A3A]">
+                                      <p className="text-[10px] text-[#FAF5ED]/60 line-clamp-3 mb-2 font-mono">{c.generated_prompt}</p>
+                                      <button onClick={() => {navigator.clipboard.writeText(c.generated_prompt!); alert('Copié !')}} className="text-[9px] text-[#24B745] hover:underline mb-2 block text-right">Copier tout</button>
+                                      
+                                      {c.image_url ? (
+                                        <div className="relative group/img">
+                                          <img src={c.image_url} className="w-full h-32 object-cover border border-[#3A3A3A]" />
+                                          <button onClick={() => setModalImageUrl(c.image_url)} className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest transition-opacity">Agrandir</button>
+                                          <button onClick={() => handleDownloadImage(c)} className="absolute top-2 right-2 bg-[#232323] p-1 hover:text-[#24B745]"><DownloadIcon className="w-4 h-4" /></button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex gap-1">
+                                          <select className="bg-[#232323] text-[#FAF5ED] text-[10px] border border-[#3A3A3A] w-20 rounded-none" onChange={(e) => setSelectedProvider({...selectedProvider, [c.id]: e.target.value as any})}>
+                                            <option value="openai">DALL-E</option>
+                                            <option value="ideogram">Ideogram</option>
+                                          </select>
+                                          <button onClick={() => handleGenerateImage(c)} disabled={generatingImageId===c.id} className="flex-1 py-2 bg-[#FAF5ED] text-[#232323] hover:bg-white font-bold text-[10px] uppercase rounded-none">
+                                            {generatingImageId===c.id ? '...' : 'Générer'}
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
-
-                                {/* Bloc Image (Séparateur visuel si prompt existe) */}
-                                {concept.generated_prompt && (
-                                  <div className="border-t border-slate-200 pt-4 flex flex-col gap-2">
-                                    {concept.image_url && (
-                                      <div className="relative group/img">
-                                        <img
-                                          src={concept.image_url}
-                                          alt={concept.concept}
-                                          className="w-full h-32 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
-                                          onClick={() => setModalImageUrl(concept.image_url!)}
-                                        />
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDownloadImage(concept);
-                                          }}
-                                          className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded shadow-sm opacity-0 group-hover/img:opacity-100 transition-opacity"
-                                          title="Télécharger l'image"
-                                        >
-                                          <DownloadIcon className="w-4 h-4 text-slate-700" />
-                                        </button>
-                                      </div>
-                                    )}
-                                    
-                                    <div className="flex flex-col gap-2">
-                                      <select
-                                        value={selectedProvider[concept.id] || 'openai'}
-                                        onChange={(e) => setSelectedProvider({
-                                          ...selectedProvider,
-                                          [concept.id]: e.target.value as ImageProvider
-                                        })}
-                                        className="text-xs border border-slate-300 rounded px-2 py-1 w-full bg-white"
-                                        disabled={generatingImageId === concept.id}
-                                      >
-                                        <option value="openai">OpenAI</option>
-                                        <option value="ideogram">Ideogram</option>
-                                        <option value="google">Google (Imagen 3)</option>
-                                      </select>
-                                      <button
-                                        onClick={() => handleGenerateImage(concept)}
-                                        disabled={generatingImageId === concept.id}
-                                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-[#26B743] hover:bg-[#1f9336] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        title="Générer l'image à partir du prompt"
-                                      >
-                                        {generatingImageId === concept.id ? (
-                                          <Loader className="w-3 h-3 animate-spin" />
-                                        ) : (
-                                          <>
-                                            <ImageIcon className="w-3 h-3" />
-                                            Générer
-                                          </>
-                                        )}
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
+                              </td>
+                            </>
                           )}
-
-                          {/* COLONNE ACTIONS (Sticky) */}
-                          <td className="py-3 px-2 sticky right-0 bg-white group-hover:bg-slate-50 border-l border-slate-200 z-10 align-top">
-                            <div className="flex flex-col items-center gap-2 mt-1">
-                              {isEditing ? (
+                          
+                          <td className="p-4 align-top sticky right-0 bg-[#232323] group-hover:bg-[#2A2A2A] border-l border-[#3A3A3A] z-10">
+                            <div className="flex flex-col gap-2">
+                              {!isEditing ? (
                                 <>
-                                  <button
-                                    onClick={saveEdit}
-                                    className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
-                                    title="Enregistrer"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEdit}
-                                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
-                                    title="Annuler"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
+                                  <button onClick={() => startEditing(c)} className="text-[#FAF5ED]/20 hover:text-[#24B745]"><Edit2 className="w-4 h-4" /></button>
+                                  <button onClick={(e) => handleDeleteConcept(c.id, e)} className="text-[#FAF5ED]/20 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                                 </>
                               ) : (
                                 <>
-                                  <button
-                                    onClick={() => startEditing(concept)}
-                                    className="p-1.5 text-slate-400 hover:text-[#26B743] hover:bg-slate-100 rounded transition-colors"
-                                    title="Modifier"
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => handleDeleteConcept(concept.id, e)}
-                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                    title="Supprimer"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  <button onClick={saveEdit} className="text-green-500 hover:text-green-400"><Check className="w-4 h-4" /></button>
+                                  <button onClick={cancelEdit} className="text-red-500 hover:text-red-400"><X className="w-4 h-4" /></button>
                                 </>
                               )}
                             </div>
                           </td>
                         </tr>
-                        );
-                      })}
+                      );})}
                     </tbody>
                   </table>
                 </div>
@@ -1190,25 +845,12 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
           ))}
         </div>
       )}
-
+      
+      {/* MODALE IMAGE */}
       {modalImageUrl && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={() => setModalImageUrl(null)}
-        >
-          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            <button
-              onClick={() => setModalImageUrl(null)}
-              className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors z-10"
-            >
-              <X className="w-6 h-6 text-slate-700" />
-            </button>
-            <img
-              src={modalImageUrl}
-              alt="Image agrandie"
-              className="max-w-full max-h-full object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setModalImageUrl(null)}>
+          <div className="relative max-w-7xl max-h-[90vh]">
+            <img src={modalImageUrl} className="max-w-full max-h-full object-contain border-2 border-[#24B745]" />
           </div>
         </div>
       )}
