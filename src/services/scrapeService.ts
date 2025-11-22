@@ -8,15 +8,14 @@ export interface ScrapeResult {
   targetAudience: string;
   brandPositioning: string;
   rawContent: string;
-  // Ajout des champs optionnels
+  // AJOUTS ICI :
   primaryColor?: string;
   secondaryColor?: string;
   brandMood?: string;
 }
 
-// Le reste de la fonction scrapeWebsite reste identique
-
 export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
+  // ... (le reste de la fonction ne change pas)
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
