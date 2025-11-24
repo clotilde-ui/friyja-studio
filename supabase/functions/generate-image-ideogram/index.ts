@@ -26,6 +26,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // CORRECTION ICI : Passage au modèle V3_FLASH (équivalent Turbo V3)
     const response = await fetch('https://api.ideogram.ai/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Api-Key': apiKey },
@@ -33,7 +34,7 @@ Deno.serve(async (req: Request) => {
         image_request: {
           prompt: prompt,
           aspect_ratio: "ASPECT_10_16",
-          model: "V_2",
+          model: "V_3_FLASH", // ✨ MODÈLE IDEOGRAM V3 (Le plus performant et rapide)
           magic_prompt_option: "AUTO"
         }
       }),
