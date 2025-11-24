@@ -26,15 +26,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // CORRECTION APPLIQUÉE : Passage au nom de modèle V_3 (le plus récent)
-    const response = await fetch('https://api.ideogram.ai/generate', {
+    // CORRECTION APPLIQUÉE : Changement d'URL vers l'endpoint V3
+    const response = await fetch('https://api.ideogram.ai/generate-v3', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Api-Key': apiKey },
       body: JSON.stringify({
         image_request: {
           prompt: prompt,
           aspect_ratio: "ASPECT_10_16",
-          model: "V_3", // Nom de modèle corrigé
+          model: "V_3",
           magic_prompt_option: "AUTO"
         }
       }),
