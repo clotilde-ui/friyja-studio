@@ -29,12 +29,12 @@ function extractHexColors(text: string): string[] {
 }
 
 // 1. MÉTHODE PRINCIPALE : Scraping Direct
-// Tente de récupérer le HTML brut. Retourne null si échec (403, 404, timeout...).
+// Tente de récupérer le HTML brut. Retourne null si échec (403, 404, timeout...), SANS planter.
 async function scrapeDirect(url: string): Promise<string | null> {
   console.log(`Attempting DIRECT scrape for ${url}...`);
   try {
     const controller = new AbortController();
-    // On laisse 8s max pour répondre, sinon on considère que ça traîne/bloque
+    // On laisse 8s max pour répondre
     const timeoutId = setTimeout(() => controller.abort(), 8000); 
 
     const browserHeaders = {
@@ -58,12 +58,12 @@ async function scrapeDirect(url: string): Promise<string | null> {
 
     if (!response.ok) {
       console.warn(`Direct scrape failed with status: ${response.status}`);
-      return null;
+      return null; // Echec silencieux, on passera au plan B
     }
     return await response.text();
   } catch (error) {
     console.warn(`Direct scrape error: ${error instanceof Error ? error.message : 'Unknown'}`);
-    return null;
+    return null; // Echec silencieux, on passera au plan B
   }
 }
 
@@ -74,10 +74,14 @@ async function scrapeViaJina(url: string): Promise<string | null> {
   try {
     // r.jina.ai renvoie le contenu nettoyé en Markdown
     const response = await fetch(`https://r.jina.ai/${url}`);
-    if (!response.ok) return null;
+    
+    if (!response.ok) {
+      console.error(`Jina AI failed with status: ${response.status}`);
+      return null;
+    }
     return await response.text();
   } catch (error) {
-    console.error("Jina AI error:", error);
+    console.error("Jina AI network error:", error);
     return null;
   }
 }
@@ -130,6 +134,7 @@ Deno.serve(async (req: Request) => {
     let scrapingSource = "Direct";
 
     // ÉTAPE 1 : TENTATIVE DIRECTE
+    // On tente le coup. Si ça échoue (403, timeout...), rawHtmlForColors sera null.
     rawHtmlForColors = await scrapeDirect(url);
 
     if (rawHtmlForColors) {
@@ -144,14 +149,16 @@ Deno.serve(async (req: Request) => {
         .trim();
     } else {
       // ÉCHEC DIRECT -> ÉTAPE 2 : JINA AI (FALLBACK)
+      console.log("Direct scrape failed (likely 403/blocked). Switching to Jina...");
       scrapingSource = "Jina AI (Fallback)";
       const jinaContent = await scrapeViaJina(url);
       
-      if (jinaContent) {
+      if (jinaContent && jinaContent.length > 50) { // Vérification minimale
         contentText = jinaContent;
+        console.log("Jina scrape successful!");
       } else {
         // ÉCHEC TOTAL (Ni Direct, ni Jina)
-        throw new Error(`Impossible d'accéder au site ${url} (Direct & Jina failed).`);
+        throw new Error(`Impossible d'accéder au site ${url}. Le site bloque l'accès direct ET le proxy Jina.`);
       }
     }
 
@@ -253,11 +260,17 @@ Réponds UNIQUEMENT avec un JSON valide au format suivant (sans markdown):
 
     const aiData = await openaiResponse.json();
     const aiContent = aiData.choices[0].message.content;
-    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
     
-    if (!jsonMatch) throw new Error('Invalid AI response format');
-    
-    const aiResult = JSON.parse(jsonMatch[0]);
+    // Parsing robuste du JSON
+    let aiResult;
+    try {
+      const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found');
+      aiResult = JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      console.error("Failed to parse AI JSON:", aiContent);
+      throw new Error("AI response format error");
+    }
 
     const result: AnalysisResult = {
       brandName: aiResult.brandName || 'Marque Inconnue',
@@ -276,6 +289,7 @@ Réponds UNIQUEMENT avec un JSON valide au format suivant (sans markdown):
     );
 
   } catch (error) {
+    console.error("Global Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
