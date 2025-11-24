@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, Analysis, Concept, Client } from '../lib/supabase';
+import { supabase, Analysis, Concept, Client, uploadImageToStorage } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram, generateImageGoogle, generateImageNanoBanana } from '../services/openaiService';
 import { generateImagePrompt } from '../services/promptGenerationService';
@@ -322,6 +322,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       alert('Veuillez d\'abord générer un prompt avant de lancer la création de l\'image.');
       return;
     }
+    
+    // Vérification des clés API
     if (provider === 'openai' && !apiKey) {
       alert('Veuillez configurer votre clé API OpenAI dans les paramètres');
       return;
@@ -335,29 +337,38 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
       return;
     }
     if (provider === 'nano-banana' && (!higgsfieldApiKey || !higgsfieldSecret)) {
-      alert('Veuillez configurer vos clés Nano Banana (API Key & Secret) dans les paramètres');
+      alert('Veuillez configurer vos clés Nano Banana (ID & API Key) dans les paramètres');
       return;
     }
 
     setGeneratingImageId(concept.id);
     try {
       const promptToUse = concept.generated_prompt;
-      let imageUrl: string;
+      let tempImageUrl: string;
 
+      // 1. GÉNÉRATION (URL Temporaire)
       if (provider === 'ideogram') {
-        imageUrl = await generateImageIdeogram(promptToUse, ideogramApiKey);
+        tempImageUrl = await generateImageIdeogram(promptToUse, ideogramApiKey);
       } else if (provider === 'google') {
-        imageUrl = await generateImageGoogle(promptToUse, googleApiKey);
+        tempImageUrl = await generateImageGoogle(promptToUse, googleApiKey);
       } else if (provider === 'nano-banana') {
-        imageUrl = await generateImageNanoBanana(promptToUse, higgsfieldApiKey, higgsfieldSecret);
+        tempImageUrl = await generateImageNanoBanana(promptToUse, higgsfieldApiKey, higgsfieldSecret);
       } else {
-        imageUrl = await generateImage(promptToUse, apiKey);
+        tempImageUrl = await generateImage(promptToUse, apiKey);
       }
 
+      // 2. SAUVEGARDE PERMANENTE (Supabase Storage)
+      // On tente de stocker l'image définitivement pour éviter l'expiration des liens
+      const permanentUrl = await uploadImageToStorage(tempImageUrl, concept.id);
+      
+      // Si l'upload a fonctionné on prend l'URL permanente, sinon on garde la temporaire (en secours)
+      const finalUrl = permanentUrl || tempImageUrl;
+
+      // 3. MISE A JOUR BASE DE DONNEES
       const { error } = await supabase
         .from('concepts')
         .update({
-          image_url: imageUrl,
+          image_url: finalUrl,
           image_generated_at: new Date().toISOString()
         })
         .eq('id', concept.id);
@@ -366,13 +377,13 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
       setConcepts(prev => prev.map(c =>
         c.id === concept.id
-          ? { ...c, image_url: imageUrl, image_generated_at: new Date().toISOString() }
+          ? { ...c, image_url: finalUrl, image_generated_at: new Date().toISOString() }
           : c
       ));
     } catch (error) {
-      console.error('Error generating image:', error);
+      console.error('Error generating/saving image:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      alert(`Erreur lors de la génération de l'image avec ${provider}:\n\n${errorMessage}\n\nVérifiez vos clés API et votre connexion.`);
+      alert(`Erreur lors de la génération ou sauvegarde de l'image:\n\n${errorMessage}`);
     } finally {
       setGeneratingImageId(null);
     }

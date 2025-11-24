@@ -68,8 +68,8 @@ export interface Settings {
   openai_api_key: string;
   ideogram_api_key?: string;
   google_api_key?: string;
-  higgsfield_api_key?: string; // NOUVEAU
-  higgsfield_secret?: string;  // NOUVEAU
+  higgsfield_api_key?: string;
+  higgsfield_secret?: string;
   created_at: string;
   updated_at: string;
 }
@@ -90,4 +90,56 @@ export interface FeatureRequestVote {
   feature_request_id: string;
   user_id: string;
   created_at: string;
+}
+
+// --- NOUVELLE FONCTION POUR L'UPLOAD D'IMAGES ---
+
+export async function uploadImageToStorage(urlOrBase64: string, conceptId: string): Promise<string | null> {
+  try {
+    let blob: Blob;
+
+    // 1. Convertir l'entrée en Blob (Fichier)
+    if (urlOrBase64.startsWith('data:image')) {
+      // Cas Base64 (Google / Nano Banana parfois)
+      const base64Data = urlOrBase64.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      blob = new Blob([byteArray], { type: 'image/png' });
+    } else {
+      // Cas URL (OpenAI / Ideogram)
+      // On doit passer par un fetch pour récupérer le binaire
+      const response = await fetch(urlOrBase64);
+      blob = await response.blob();
+    }
+
+    // 2. Générer un nom de fichier unique
+    const fileName = `${conceptId}_${Date.now()}.png`;
+
+    // 3. Upload vers Supabase Storage
+    // Le bucket 'generated-images' doit être créé dans Supabase au préalable
+    const { error: uploadError } = await supabase.storage
+      .from('generated-images')
+      .upload(fileName, blob, {
+        contentType: 'image/png',
+        upsert: true
+      });
+
+    if (uploadError) throw uploadError;
+
+    // 4. Récupérer l'URL publique
+    const { data } = supabase.storage
+      .from('generated-images')
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+
+  } catch (error) {
+    console.error('Erreur upload storage:', error);
+    // Si l'upload échoue, on renvoie null (ou l'on pourrait renvoyer l'url temporaire en fallback)
+    return null;
+  }
 }
