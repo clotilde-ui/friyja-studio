@@ -108,18 +108,18 @@ export default function Settings({ onBack }: SettingsProps) {
             
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] text-[#FAF5ED]/50 uppercase font-bold mb-1 block">API Key</label>
+                <label className="text-[10px] text-[#FAF5ED]/50 uppercase font-bold mb-1 block">ID</label>
                 <div className="relative">
                   <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FAF5ED]/30" />
-                  <input type="password" value={higgsfieldApiKey} onChange={(e) => setHiggsfieldApiKey(e.target.value)} placeholder="API Key..." className="w-full pl-10 pr-4 py-3 bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] focus:border-yellow-400 outline-none text-sm font-mono" />
+                  <input type="password" value={higgsfieldApiKey} onChange={(e) => setHiggsfieldApiKey(e.target.value)} placeholder="ID..." className="w-full pl-10 pr-4 py-3 bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] focus:border-yellow-400 outline-none text-sm font-mono" />
                 </div>
               </div>
               
               <div>
-                <label className="text-[10px] text-[#FAF5ED]/50 uppercase font-bold mb-1 block">API Secret</label>
+                <label className="text-[10px] text-[#FAF5ED]/50 uppercase font-bold mb-1 block">API Key</label>
                 <div className="relative">
                   <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FAF5ED]/30" />
-                  <input type="password" value={higgsfieldSecret} onChange={(e) => setHiggsfieldSecret(e.target.value)} placeholder="Secret..." className="w-full pl-10 pr-4 py-3 bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] focus:border-yellow-400 outline-none text-sm font-mono" />
+                  <input type="password" value={higgsfieldSecret} onChange={(e) => setHiggsfieldSecret(e.target.value)} placeholder="Key..." className="w-full pl-10 pr-4 py-3 bg-[#232323] border border-[#3A3A3A] text-[#FAF5ED] focus:border-yellow-400 outline-none text-sm font-mono" />
                 </div>
               </div>
             </div>
