@@ -10,7 +10,7 @@ interface ConceptsViewProps {
   onBack: () => void;
 }
 
-type ImageProvider = 'openai' | 'ideogram' | 'nano-banana';
+type ImageProvider = 'openai' | 'ideogram' | 'google' | 'nano-banana';
 type Tab = 'video' | 'static';
 
 export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
