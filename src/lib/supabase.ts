@@ -122,7 +122,7 @@ export async function uploadImageToStorage(urlOrBase64: string, conceptId: strin
     // 3. Upload vers Supabase Storage
     // Le bucket 'generated-images' doit être créé dans Supabase au préalable
     const { error: uploadError } = await supabase.storage
-      .from('generated-images')
+      .from('GENERATED-IMAGES')
       .upload(fileName, blob, {
         contentType: 'image/png',
         upsert: true
@@ -132,7 +132,7 @@ export async function uploadImageToStorage(urlOrBase64: string, conceptId: strin
 
     // 4. Récupérer l'URL publique
     const { data } = supabase.storage
-      .from('generated-images')
+      .from('GENERATED-IMAGES')
       .getPublicUrl(fileName);
 
     return data.publicUrl;
