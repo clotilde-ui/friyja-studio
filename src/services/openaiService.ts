@@ -15,6 +15,7 @@ export interface ConceptData {
   media_type: 'video' | 'static';
 }
 
+// --- GENERATION DE CONCEPTS VIDÉOS ---
 export async function generateVideoConcepts(
   brandName: string,
   websiteUrl: string,
@@ -115,6 +116,7 @@ Réponds UNIQUEMENT avec un JSON valide au format suivant (array de 15 objets mi
   return concepts.map((c: ConceptData) => ({ ...c, media_type: 'video' as const }));
 }
 
+// --- GENERATION DE CONCEPTS STATIQUES ---
 export async function generateStaticConcepts(
   brandName: string,
   websiteUrl: string,
@@ -213,6 +215,7 @@ Réponds UNIQUEMENT avec un JSON valide au format suivant (array de 15 objets mi
   return concepts.map((c: ConceptData) => ({ ...c, media_type: 'static' as const }));
 }
 
+// --- GENERATION IMAGES (OPENAI) ---
 export async function generateImage(
   prompt: string,
   apiKey: string
@@ -241,6 +244,7 @@ export async function generateImage(
   return data.data[0].url;
 }
 
+// --- GENERATION IMAGES (IDEOGRAM) ---
 export async function generateImageIdeogram(
   prompt: string,
   apiKey: string
@@ -278,8 +282,8 @@ export async function generateImageIdeogram(
     throw new Error('Failed to connect to Ideogram API');
   }
 }
-// ... (gardez tout le code existant au-dessus) ...
 
+// --- GENERATION IMAGES (GOOGLE) ---
 export async function generateImageGoogle(
   prompt: string,
   apiKey: string
@@ -315,5 +319,47 @@ export async function generateImageGoogle(
       throw error;
     }
     throw new Error('Failed to connect to Google API');
+  }
+}
+
+// --- GENERATION IMAGES (NANO BANANA / HIGGSFIELD) ---
+export async function generateImageNanoBanana(
+  prompt: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<string> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const edgeFunctionUrl = `${supabaseUrl}/functions/v1/generate-image-nanobanana`;
+
+  try {
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({
+        prompt,
+        apiKey,
+        apiSecret,
+        aspect_ratio: "1:1" // Carré par défaut
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Nano Banana Edge Function error:', errorData);
+      throw new Error(errorData.error || 'Failed to generate image with Nano Banana');
+    }
+
+    const data = await response.json();
+    return data.url;
+  } catch (error) {
+    console.error('Nano Banana generation error:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to connect to Nano Banana API');
   }
 }

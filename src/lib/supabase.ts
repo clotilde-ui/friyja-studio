@@ -67,7 +67,9 @@ export interface Settings {
   user_id: string;
   openai_api_key: string;
   ideogram_api_key?: string;
-  google_api_key?: string; // <--- Le champ ajouté
+  google_api_key?: string;
+  higgsfield_api_key?: string; // NOUVEAU
+  higgsfield_secret?: string;  // NOUVEAU
   created_at: string;
   updated_at: string;
 }
