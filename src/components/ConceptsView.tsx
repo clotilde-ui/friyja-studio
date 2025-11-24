@@ -13,68 +13,67 @@ interface ConceptsViewProps {
 type ImageProvider = 'openai' | 'ideogram' | 'google' | 'nano-banana';
 type Tab = 'video' | 'static';
 
-
+// --- NOUVEAU COMPOSANT DE COMPTE À REBOURS (CORRIGÉ) ---
 const CountdownWarning = ({ generatedAt, isTemporaryUrl }: { generatedAt?: string, isTemporaryUrl: boolean }) => {
-  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+    const [timeLeft, setTimeLeft] = useState<string | null>(null);
 
-  useEffect(() => {
-      if (!isTemporaryUrl || !generatedAt) {
-          setTimeLeft(null);
-          return;
-      }
+    useEffect(() => {
+        if (!isTemporaryUrl || !generatedAt) {
+            setTimeLeft(null);
+            return;
+        }
 
-      const generatedDate = new Date(generatedAt);
-      // Expiration = Heure de génération + 60 minutes
-      const expirationTime = generatedDate.getTime() + 60 * 60 * 1000; 
+        const generatedDate = new Date(generatedAt);
+        // Expiration = Heure de génération + 60 minutes
+        const expirationTime = generatedDate.getTime() + 60 * 60 * 1000; 
 
-      const calculateTimeLeft = () => {
-          const now = new Date().getTime();
-          const difference = expirationTime - now;
+        const calculateTimeLeft = () => {
+            const now = new Date().getTime();
+            const difference = expirationTime - now;
 
-          if (difference <= 0) {
-              // Si expiré, on met un état spécial qui force la disparition
-              setTimeLeft("EXPIRED"); 
-              return false; // Stop the countdown
-          }
+            if (difference <= 0) {
+                // Si expiré, on met un état spécial qui force la disparition
+                setTimeLeft("EXPIRED"); 
+                return false; // Stop the countdown
+            }
 
-          const minutes = Math.floor((difference / 1000 / 60) % 60);
-          const seconds = Math.floor((difference / 1000) % 60);
+            const minutes = Math.floor((difference / 1000 / 60) % 60);
+            const seconds = Math.floor((difference / 1000) % 60);
 
-          // Format: MM:SS
-          const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-          setTimeLeft(formattedTime);
-          return true; // Continue the countdown
-      };
+            // Format: MM:SS
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            setTimeLeft(formattedTime);
+            return true; // Continue the countdown
+        };
 
-      // Lancement initial et gestion de l'état expiré
-      if (!calculateTimeLeft() && timeLeft !== "EXPIRED") return;
+        // Lancement initial et gestion de l'état expiré
+        if (!calculateTimeLeft() && timeLeft !== "EXPIRED") return;
 
-      // Configuration de l'intervalle d'une seconde
-      const intervalId = setInterval(() => {
-          if (!calculateTimeLeft()) {
-              clearInterval(intervalId);
-          }
-      }, 1000);
+        // Configuration de l'intervalle d'une seconde
+        const intervalId = setInterval(() => {
+            if (!calculateTimeLeft()) {
+                clearInterval(intervalId);
+            }
+        }, 1000);
 
-      // Nettoyage de l'intervalle lorsque le composant est démonté
-      return () => clearInterval(intervalId);
-  }, [generatedAt, isTemporaryUrl, timeLeft]); // Ajout de timeLeft pour un meilleur re-render check
+        // Nettoyage de l'intervalle lorsque le composant est démonté
+        return () => clearInterval(intervalId);
+    }, [generatedAt, isTemporaryUrl, timeLeft]); 
 
-  // 1. Si ce n'est pas une URL temporaire, on ne l'affiche pas
-  if (!isTemporaryUrl) return null;
-  
-  // 2. Si le temps est EXPIRED, on retourne null pour qu'il disparaisse
-  if (timeLeft === "EXPIRED") return null;
+    // 1. Si ce n'est pas une URL temporaire, on ne l'affiche pas
+    if (!isTemporaryUrl) return null;
+    
+    // 2. Si le temps est EXPIRED, on retourne null pour qu'il disparaisse
+    if (timeLeft === "EXPIRED") return null;
 
-  // 3. Affichage normal avec le compte à rebours
-  return (
-      <div className={`bg-red-500/20 text-red-400 border-l-4 border-red-500 p-2 text-[10px] font-bold uppercase tracking-wider mb-2 animate-pulse`}>
-          ⚠️ L'IMAGE DISPARAITRA DANS {timeLeft} MIN
-      </div>
-  );
+    // 3. Affichage normal avec le compte à rebours
+    return (
+        <div className={`bg-red-500/20 text-red-400 border-l-4 border-red-500 p-2 text-[10px] font-bold uppercase tracking-wider mb-2 animate-pulse`}>
+            ⚠️ L'IMAGE DISPARAITRA A JAMAIS DANS {timeLeft}
+        </div>
+    );
 };
 // --- FIN DU NOUVEAU COMPOSANT ---
-
 
 export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   const { user } = useAuth();
@@ -780,8 +779,8 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                          const displayConcept = isEditing ? editedConcept : c;
                          
                          // DÉTECTION DU LIEN TEMPORAIRE
-                         // Si l'URL existe, ne contient pas le nom du bucket (GENERATED-IMAGES) et n'est pas une URL Base64 (data:), c'est une URL temporaire.
-                         const isTemporaryUrl = c.image_url && !c.image_url.includes('GENERATED-IMAGES') && !c.image_url.startsWith('data:');
+                         // CORRECTION TS2322: utilisation de !! pour forcer le résultat en boolean.
+                         const isTemporaryUrl = !!(c.image_url && !c.image_url.includes('GENERATED-IMAGES') && !c.image_url.startsWith('data:'));
                          
                          return (
                         <tr key={c.id} className="group hover:bg-[#2A2A2A] transition-colors">
