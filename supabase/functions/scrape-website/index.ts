@@ -28,6 +28,50 @@ function extractHexColors(text: string): string[] {
   return matches.map(c => c.toLowerCase());
 }
 
+// Fonction de fetch avec retry et rotation de User-Agent
+async function fetchWithFallback(url: string): Promise<Response> {
+  // 1. Tentative avec Headers de navigateur moderne (Windows/Chrome)
+  const browserHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Cache-Control': 'max-age=0',
+    'Referer': 'https://www.google.com/',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"Windows"',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'cross-site',
+    'Sec-Fetch-User': '?1',
+    'Connection': 'keep-alive'
+  };
+
+  console.log(`Attempting scrape of ${url} with Browser headers...`);
+  let response = await fetch(url, { method: 'GET', headers: browserHeaders });
+
+  // Si succès, on retourne
+  if (response.ok) return response;
+
+  // Si bloqué (403 Forbidden ou 401 Unauthorized), on tente la stratégie "Googlebot"
+  if (response.status === 403 || response.status === 401) {
+    console.log(`Browser headers blocked (${response.status}). Retrying with Googlebot headers...`);
+    
+    const googleBotHeaders = {
+      'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive'
+    };
+
+    response = await fetch(url, { method: 'GET', headers: googleBotHeaders });
+  }
+
+  return response;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -67,30 +111,18 @@ Deno.serve(async (req: Request) => {
 
     if (!settings?.openai_api_key) throw new Error("OpenAI API key not configured");
 
-    // --- SCRAPING & ANALYSE COULEURS (CORRECTION ICI) ---
-    
-    // On ajoute des headers pour simuler un vrai navigateur Chrome sur Mac
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1'
-      }
-    });
+    // --- SCRAPING AMÉLIORÉ ---
+    const response = await fetchWithFallback(url);
 
     if (!response.ok) {
-      console.error(`Scraping failed for ${url}: ${response.status} ${response.statusText}`);
-      // On lit le corps de l'erreur pour les logs si possible, sans faire planter
-      try { const errText = await response.text(); console.error(errText); } catch {}
-      throw new Error(`Failed to fetch website: ${response.status} ${response.statusText} (Forbidden or Blocked)`);
+      console.error(`Scraping completely failed for ${url}: ${response.status} ${response.statusText}`);
+      try { const errText = await response.text(); console.error('Error body:', errText.substring(0, 500)); } catch {}
+      
+      // Message d'erreur plus explicite pour l'utilisateur
+      let userMessage = `Failed to fetch website: ${response.status} ${response.statusText}`;
+      if (response.status === 403) userMessage += " (Site protected against bots)";
+      
+      throw new Error(userMessage);
     }
 
     const html = await response.text();
