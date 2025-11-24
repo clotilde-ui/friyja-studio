@@ -26,18 +26,19 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // CORRECTION APPLIQUÉE : Changement d'URL vers l'endpoint V3
-    const response = await fetch('https://api.ideogram.ai/generate-v3', {
+    // Préparation du corps de la requête au format multipart/form-data
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+    // CORRECTION : Utilisation du format "10x16" (validé par l'erreur précédente)
+    formData.append('aspect_ratio', '10x16');
+    formData.append('model', 'V_3'); 
+    formData.append('magic_prompt_option', 'AUTO'); 
+
+    // Appel à l'URL finale correcte pour la V3
+    const response = await fetch('https://api.ideogram.ai/v1/ideogram-v3/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Api-Key': apiKey },
-      body: JSON.stringify({
-        image_request: {
-          prompt: prompt,
-          aspect_ratio: "ASPECT_10_16",
-          model: "V_3",
-          magic_prompt_option: "AUTO"
-        }
-      }),
+      headers: { 'Api-Key': apiKey },
+      body: formData,
     });
 
     if (!response.ok) {
