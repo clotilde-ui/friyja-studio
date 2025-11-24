@@ -10,7 +10,7 @@ interface ConceptsViewProps {
   onBack: () => void;
 }
 
-type ImageProvider = 'openai' | 'ideogram' | 'google' | 'nano-banana';
+type ImageProvider = 'openai' | 'ideogram' | 'nano-banana';
 type Tab = 'video' | 'static';
 
 export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
@@ -781,7 +781,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                         <select className="bg-[#232323] text-[#FAF5ED] text-[10px] border border-[#3A3A3A] w-20 rounded-none" onChange={(e) => setSelectedProvider({...selectedProvider, [c.id]: e.target.value as any})}>
                                           <option value="openai">DALL-E</option>
                                           <option value="ideogram">Ideogram</option>
-                                          <option value="google">Google</option>
+                                          {/* Google option removed */}
                                           <option value="nano-banana">Nano Banana</option>
                                         </select>
                                         <button onClick={() => handleGenerateImage(c)} disabled={generatingImageId===c.id} className={`flex-1 py-2 font-bold text-[10px] uppercase rounded-none flex items-center justify-center gap-1 ${c.image_url ? 'bg-[#232323] text-[#FAF5ED] border border-[#FAF5ED]/20 hover:bg-[#2A2A2A]' : 'bg-[#FAF5ED] text-[#232323] hover:bg-white'}`}>
