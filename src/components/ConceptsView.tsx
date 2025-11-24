@@ -3,7 +3,7 @@ import { supabase, Analysis, Concept, Client } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { generateVideoConcepts, generateStaticConcepts, generateImage, generateImageIdeogram, generateImageGoogle } from '../services/openaiService';
 import { generateImagePrompt } from '../services/promptGenerationService';
-import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Video, ChevronDown, ChevronUp, Save, PenTool } from 'lucide-react';
+import { ArrowLeft, Loader, Download, FileDown, Trash2, X, Image as ImageIcon, Edit2, Check, DownloadIcon, Sparkles, Video, ChevronDown, ChevronUp, Save, PenTool, RefreshCw } from 'lucide-react';
 
 interface ConceptsViewProps {
   analysis: Analysis;
@@ -766,23 +766,24 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                                       
                                       <button onClick={() => {navigator.clipboard.writeText(c.generated_prompt!); alert('Copié !')}} className="text-[9px] text-[#24B745] hover:underline mb-2 block text-right">Copier tout</button>
                                       
-                                      {c.image_url ? (
-                                        <div className="relative group/img">
+                                      {c.image_url && (
+                                        <div className="relative group/img mb-2">
                                           <img src={c.image_url} className="w-full h-32 object-cover border border-[#3A3A3A]" />
                                           <button onClick={() => setModalImageUrl(c.image_url || null)} className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest transition-opacity">Agrandir</button>
                                           <button onClick={() => handleDownloadImage(c)} className="absolute top-2 right-2 bg-[#232323] p-1 hover:text-[#24B745]"><DownloadIcon className="w-4 h-4" /></button>
                                         </div>
-                                      ) : (
-                                        <div className="flex gap-1">
-                                          <select className="bg-[#232323] text-[#FAF5ED] text-[10px] border border-[#3A3A3A] w-20 rounded-none" onChange={(e) => setSelectedProvider({...selectedProvider, [c.id]: e.target.value as any})}>
-                                            <option value="openai">DALL-E</option>
-                                            <option value="ideogram">Ideogram</option>
-                                          </select>
-                                          <button onClick={() => handleGenerateImage(c)} disabled={generatingImageId===c.id} className="flex-1 py-2 bg-[#FAF5ED] text-[#232323] hover:bg-white font-bold text-[10px] uppercase rounded-none">
-                                            {generatingImageId===c.id ? '...' : 'Générer'}
-                                          </button>
-                                        </div>
                                       )}
+                                      
+                                      {/* ZONE DE GÉNÉRATION (Toujours visible pour permettre la régénération) */}
+                                      <div className="flex gap-1">
+                                        <select className="bg-[#232323] text-[#FAF5ED] text-[10px] border border-[#3A3A3A] w-20 rounded-none" onChange={(e) => setSelectedProvider({...selectedProvider, [c.id]: e.target.value as any})}>
+                                          <option value="openai">DALL-E</option>
+                                          <option value="ideogram">Ideogram</option>
+                                        </select>
+                                        <button onClick={() => handleGenerateImage(c)} disabled={generatingImageId===c.id} className={`flex-1 py-2 font-bold text-[10px] uppercase rounded-none flex items-center justify-center gap-1 ${c.image_url ? 'bg-[#232323] text-[#FAF5ED] border border-[#FAF5ED]/20 hover:bg-[#2A2A2A]' : 'bg-[#FAF5ED] text-[#232323] hover:bg-white'}`}>
+                                          {generatingImageId===c.id ? '...' : (c.image_url ? <><RefreshCw className="w-3 h-3" /> Regénérer</> : 'Générer')}
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
