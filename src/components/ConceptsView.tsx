@@ -69,7 +69,7 @@ const CountdownWarning = ({ generatedAt, isTemporaryUrl }: { generatedAt?: strin
     // 3. Affichage normal avec le compte à rebours
     return (
         <div className={`bg-red-500/20 text-red-400 border-l-4 border-red-500 p-2 text-[10px] font-bold uppercase tracking-wider mb-2 animate-pulse`}>
-            ⚠️ L'IMAGE DISPARAITRA A JAMAIS DANS {timeLeft}
+            ⚠️ L'IMAGE DISPARAITRA DANS {timeLeft} MIN
         </div>
     );
 };
