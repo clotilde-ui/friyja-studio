@@ -67,9 +67,32 @@ Deno.serve(async (req: Request) => {
 
     if (!settings?.openai_api_key) throw new Error("OpenAI API key not configured");
 
-    // --- SCRAPING & ANALYSE COULEURS ---
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch website: ${response.statusText}`);
+    // --- SCRAPING & ANALYSE COULEURS (CORRECTION ICI) ---
+    
+    // On ajoute des headers pour simuler un vrai navigateur Chrome sur Mac
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`Scraping failed for ${url}: ${response.status} ${response.statusText}`);
+      // On lit le corps de l'erreur pour les logs si possible, sans faire planter
+      try { const errText = await response.text(); console.error(errText); } catch {}
+      throw new Error(`Failed to fetch website: ${response.status} ${response.statusText} (Forbidden or Blocked)`);
+    }
+
     const html = await response.text();
 
     // 1. Extraction ciblée (Header, Footer, SVG)

@@ -83,3 +83,5 @@ VITE_SUPABASE_ANON_KEY=votre-anon-key
 - Redémarrez votre serveur après avoir modifié le `.env`
 
 
+
+

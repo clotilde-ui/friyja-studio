@@ -64,3 +64,5 @@ Si vous rencontrez une erreur lors de l'exécution :
 - Vérifiez les logs d'erreur dans Supabase
 
 
+
+

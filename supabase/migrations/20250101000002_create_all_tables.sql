@@ -189,3 +189,5 @@ CREATE POLICY "Les utilisateurs peuvent modifier leurs propres paramètres"
   USING (auth.uid() = user_id);
 
 
+
+
