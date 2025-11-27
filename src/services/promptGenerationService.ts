@@ -32,7 +32,6 @@ export async function generateImagePrompt(
     : '[GÉNÈRE UNE BASELINE COURTE BASÉE SUR L\'OFFRE ET LE POSITIONNEMENT]';
     
   // Définition de la valeur injectée ou de l'instruction de génération (pour les Mots-clés)
-  // Note: La valeur doit être un tableau JSON valide pour l'injection
   const keywordsValue = clientKeywords.length > 0 
     ? JSON.stringify(clientKeywords) 
     : '["[GÉNÈRE UNE LISTE DE MOTS CLÉS PERTINENTS (5-7) BASÉS SUR LE CONCEPT ET L\'ANALYSE]"]';
@@ -180,8 +179,8 @@ RÉPONSE (JSON STRICT) :
         throw new Error("Invalid JSON format returned from OpenAI: " + jsonString.substring(0, 100));
     }
 
-    // On retourne le prompt descriptif pour le générateur d'image (image_prompt_for_generator)
-    return resultJson.image_prompt_for_generator || JSON.stringify(resultJson);
+    // NOUVEAU: Retourner le JSON complet et formaté
+    return JSON.stringify(resultJson, null, 2); 
 
   } catch (error) {
     console.error("Error generating prompt:", error);

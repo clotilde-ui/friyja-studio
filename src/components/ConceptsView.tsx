@@ -352,6 +352,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
     setGeneratingPromptId(concept.id);
     try {
+      // Le résultat est maintenant une chaîne JSON complète
       const prompt = await generateImagePrompt(clientData, analysisParams, concept, apiKey);
       const { error } = await supabase
         .from('concepts')
@@ -377,11 +378,26 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     }
   }
 
+  // NOUVELLE FONCTION UTILITAIRE POUR EXTRAIRE LE PROMPT DALL-E DU JSON
+  function extractDallePrompt(jsonString?: string): string | null {
+      if (!jsonString) return null;
+      try {
+          const jsonObject = JSON.parse(jsonString);
+          return jsonObject.image_prompt_for_generator || null;
+      } catch (e) {
+          // Si ce n'est pas du JSON (ancien format), on le retourne brut
+          return jsonString;
+      }
+  }
+
   async function handleGenerateImage(concept: Concept) {
     const provider = selectedProvider[concept.id] || 'openai';
 
-    if (!concept.generated_prompt) {
-      alert('Veuillez d\'abord générer un prompt avant de lancer la création de l\'image.');
+    // Extraction du prompt DALL-E à partir du JSON complet sauvegardé
+    const promptToUse = extractDallePrompt(concept.generated_prompt);
+
+    if (!promptToUse) {
+      alert('Veuillez d\'abord générer un prompt structuré (JSON) avant de lancer la création de l\'image.');
       return;
     }
     
@@ -405,7 +421,6 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
 
     setGeneratingImageId(concept.id);
     try {
-      const promptToUse = concept.generated_prompt;
       let tempImageUrl: string;
 
       // 1. GÉNÉRATION (URL Temporaire)
@@ -485,6 +500,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
   // --- LOGIQUE EDITION PROMPT (MODALE) ---
   function openPromptModal(concept: Concept) {
     if (!concept.generated_prompt) return;
+    // La modale modifie le champ JSON complet
     setEditingPromptData({ id: concept.id, text: concept.generated_prompt });
     setIsPromptModalOpen(true);
   }
@@ -495,6 +511,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
     try {
       const { error } = await supabase
         .from('concepts')
+        // On sauvegarde le JSON complet
         .update({ generated_prompt: editingPromptData.text })
         .eq('id', editingPromptData.id);
 
@@ -622,7 +639,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
         content += `CTA:\n${c.cta}\n\n`;
         if (activeTab === 'static') {
           content += `Visuel suggéré:\n${c.suggested_visual}\n\n`;
-          if (c.generated_prompt) content += `Prompt:\n${c.generated_prompt}\n\n`;
+          if (c.generated_prompt) content += `Prompt (JSON):\n${c.generated_prompt}\n\n`; // Affiche le JSON complet
         } else {
           content += `Script:\n${c.script_outline}\n\n`;
         }
@@ -925,7 +942,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
             
             <div className="flex items-center gap-2 mb-4 text-[#24B745]">
               <PenTool className="w-5 h-5" />
-              <h3 className="text-lg font-bold uppercase tracking-widest">Modifier le Prompt</h3>
+              <h3 className="text-lg font-bold uppercase tracking-widest">Modifier le Prompt (JSON)</h3>
             </div>
             
             <div className="mb-4">
@@ -933,7 +950,7 @@ export default function ConceptsView({ analysis, onBack }: ConceptsViewProps) {
                 value={editingPromptData.text} 
                 onChange={(e) => setEditingPromptData({...editingPromptData, text: e.target.value})} 
                 className="w-full h-64 bg-[#1A1A1A] border border-[#3A3A3A] text-[#FAF5ED] p-4 font-mono text-sm focus:border-[#24B745] outline-none resize-none rounded-none"
-                placeholder="Entrez votre prompt ici..."
+                placeholder="Entrez votre prompt JSON ici..."
               />
             </div>
             
